@@ -54,7 +54,9 @@ jobs:
         run: brew install sdl2 sdl2_ttf
 
       - name: Configure
-        run: cmake -B build -DCMAKE_BUILD_TYPE=Release
+        run: |
+          cmake -B build -DCMAKE_BUILD_TYPE=Release \
+          -DCMAKE_PREFIX_PATH="$(brew --prefix sdl2);$(brew --prefix sdl2_ttf)"
 
       - name: Build
         run: cmake --build build --config Release
@@ -71,23 +73,20 @@ jobs:
             build/tests
 
   build-windows:
-    name: Windows (MSVC + vcpkg)
+    name: Windows (MSVC)
     runs-on: windows-latest
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup vcpkg
-        uses: lukka/run-vcpkg@v11
-        with:
-          vcpkgGitCommitId: 'a42af01b72c28a8e1d7b48107b33e4f286a55ef6'
-
       - name: Install dependencies
         run: vcpkg install sdl2 sdl2-ttf --triplet x64-windows
+        env:
+          VCPKG_BINARY_SOURCES: "clear"
 
       - name: Configure
-        run: cmake -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE=${{ github.workspace }}/vcpkg/scripts/buildsystems/vcpkg.cmake
+        run: cmake -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE=C:/tools/vcpkg/scripts/buildsystems/vcpkg.cmake
 
       - name: Build
         run: cmake --build build --config Release

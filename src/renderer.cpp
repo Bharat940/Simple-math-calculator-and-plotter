@@ -2,7 +2,7 @@
 #include "math/constants.h"
 #include <string>
 #include <cmath>
-#include <SDL2/SDL_ttf.h>
+#include <SDL_ttf.h>
 
 static SDL_Color PALETTE[] = {
 	{0, 255, 0, 255},

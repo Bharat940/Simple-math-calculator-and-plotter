@@ -61,15 +61,19 @@ if(BUILD_GUI)
         elseif(SDL2_TTF_LIBRARIES)
             target_link_libraries(plotter PRIVATE ${SDL2_TTF_LIBRARIES})
             target_include_directories(plotter PRIVATE ${SDL2_TTF_INCLUDE_DIRS})
+        elseif(SDL2_ttf_INCLUDE_DIRS)
+            target_include_directories(plotter PRIVATE ${SDL2_ttf_INCLUDE_DIRS})
         endif()
 
-        # Extra include path to support <SDL2/SDL.h> format if needed
-        # Some vcpkg/system installs only add .../include/SDL2 to the path
+        # Add SDL2 subdirectories to include path to support <SDL.h> style
         if(SDL2_INCLUDE_DIRS)
-            foreach(inc ${SDL2_INCLUDE_DIRS})
-                get_filename_component(inc_parent "${inc}" DIRECTORY)
-                target_include_directories(plotter PRIVATE "${inc_parent}")
-            endforeach()
+            target_include_directories(plotter PRIVATE ${SDL2_INCLUDE_DIRS})
+        endif()
+        if(SDL2_TTF_INCLUDE_DIRS)
+            target_include_directories(plotter PRIVATE ${SDL2_TTF_INCLUDE_DIRS})
+        endif()
+        if(SDL2_ttf_INCLUDE_DIRS)
+            target_include_directories(plotter PRIVATE ${SDL2_ttf_INCLUDE_DIRS})
         endif()
 
         if(MSVC)
