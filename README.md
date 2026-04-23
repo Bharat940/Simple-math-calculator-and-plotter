@@ -1,158 +1,425 @@
-# Function Plotter
+<p align="center">
+  <h1 align="center">Function Plotter</h1>
+  <p align="center">
+    A real-time mathematical function plotter with an interactive GUI and a powerful CLI.<br>
+    Built from scratch in C++17 with SDL2. No external math libraries.
+  </p>
+</p>
 
-A powerful mathematical function plotting application with both GUI and command-line interfaces. Built with C++ and SDL2, it can parse, evaluate, and visualize complex mathematical expressions in real-time.
+<p align="center">
+  <img src="https://img.shields.io/badge/C%2B%2B-17-blue?style=flat-square&logo=cplusplus" alt="C++17">
+  <img src="https://img.shields.io/badge/SDL2-2.0-green?style=flat-square" alt="SDL2">
+  <img src="https://img.shields.io/badge/CMake-3.10+-orange?style=flat-square&logo=cmake" alt="CMake">
+  <img src="https://img.shields.io/badge/License-MIT-yellow?style=flat-square" alt="MIT License">
+  <img src="https://img.shields.io/badge/Platform-Linux%20%7C%20macOS%20%7C%20Windows-lightgrey?style=flat-square" alt="Platform">
+  <br>
+  <img src="https://github.com/Bharat940/Simple-math-calculator-and-plotter/actions/workflows/build.yml/badge.svg" alt="Build and Test">
+</p>
+
+---
 
 ## Features
 
-### GUI Mode
-- Interactive plotting of mathematical functions
-- Real-time zooming and panning with mouse wheel and keyboard
-- Multiple function plotting with color-coded legends
-- Display of roots (zeros) and extrema (minima/maxima)
-- Tangent line visualization at cursor position
-- Coordinate display at mouse position
-- Grid and axis labels with adaptive scaling
+### Interactive GUI
+- **Real-time function plotting** with adaptive curve rendering for smooth visuals
+- **Multi-function support** -- plot and compare multiple functions simultaneously with color-coded legends
+- **Zoom and pan** -- mouse wheel zoom with keyboard panning (arrow keys)
+- **Tangent line visualization** at the cursor position
+- **Root and extrema markers** -- toggle display of zeros and local min/max points
+- **Live coordinate tracking** -- see exact (x, y) values at the mouse cursor
+- **Adaptive grid** with configurable scaling modes (auto / fixed / loose / dense)
+- **Discontinuity detection** -- avoids drawing false connections at asymptotes (e.g. `tan(x)`)
 
-### Command-Line Mode
-- Expression evaluation: `plotter -e "sin(x) + cos(x)"`
-- Root finding: `plotter -s "x^2 - 4"`
-- Intersection finding: `plotter -i "x^2" "2*x + 1"`
-- Explicit plotting: `plotter -p "x^3 - 3*x"`
+### Command-Line Interface
+- **Evaluate** expressions: `plotter -e "sin(pi/2)"`
+- **Solve** equations (find roots): `plotter -s "x^2 - 4"`
+- **Find intersections** of two functions: `plotter -i "x^2" "2*x + 1"`
+- **Verbose mode** with Newton-Raphson convergence details
 
-## Supported Functions
+---
 
-### Trigonometric
-- `sin(x)`, `cos(x)`, `tan(x)`
-- `asin(x)`, `acos(x)`, `atan(x)`
+## Supported Math
 
-### Hyperbolic
-- `sinh(x)`, `cosh(x)`, `tanh(x)`
+| Category | Functions |
+|----------|-----------|
+| **Trigonometric** | `sin`, `cos`, `tan`, `asin`, `acos`, `atan` |
+| **Hyperbolic** | `sinh`, `cosh`, `tanh` |
+| **Exponential** | `exp`, `log` (natural), `log10`, `log(x, base)` |
+| **Algebraic** | `sqrt`, `abs`, `floor`, `ceil`, `pow`, `max`, `min` |
+| **Constants** | `pi`, `e` (Euler's number), `phi` (Golden ratio) |
+| **Operators** | `+`, `-`, `*`, `/`, `^` (power) |
 
-### Exponential & Logarithmic
-- `exp(x)`, `log(x)`, `log10(x)`
-- `log(x, base)` for arbitrary base logarithms
+**Smart parsing features:**
+- Implicit multiplication: `2x`, `3sin(x)`, `(x+1)(x-1)`
+- Unary minus: `-x^2`, `sin(-x)`
+- Nested functions: `sin(cos(x^2))`
 
-### Algebraic
-- `sqrt(x)`, `abs(x)`
-- `floor(x)`, `ceil(x)`
-- `pow(x, y)`, `max(x, y)`, `min(x, y)`
+---
 
-### Constants
-- `pi` (π ≈ 3.14159)
-- `e` (Euler's number ≈ 2.71828)
-- `phi` (Golden ratio ≈ 1.61803)
+## Building from Source
+
+### Prerequisites
+
+- **CMake** 3.10 or later
+- **C++17** compatible compiler (GCC 7+, Clang 5+, MSVC 2017+)
+- **SDL2** and **SDL2_ttf** development libraries
+
+### Linux
+
+```bash
+# Install dependencies
+# Ubuntu / Debian
+sudo apt-get install cmake g++ libsdl2-dev libsdl2-ttf-dev
+
+# Fedora
+sudo dnf install cmake gcc-c++ SDL2-devel SDL2_ttf-devel
+
+# Arch Linux
+sudo pacman -S cmake sdl2 sdl2_ttf
+
+# Build
+git clone https://github.com/Bharat940/Simple-math-calculator-and-plotter.git
+cd Simple-math-calculator-and-plotter
+mkdir build && cd build
+cmake ..
+make
+
+./plotter "sin(x)"
+```
+
+### macOS
+
+```bash
+# Install dependencies via Homebrew
+brew install cmake sdl2 sdl2_ttf
+
+# Build
+git clone https://github.com/Bharat940/Simple-math-calculator-and-plotter.git
+cd Simple-math-calculator-and-plotter
+mkdir build && cd build
+cmake ..
+make
+
+./plotter "sin(x)"
+```
+
+### Windows
+
+**Recommended: vcpkg + Visual Studio 2022**
+
+1. **Install vcpkg** (if not already installed):
+   ```powershell
+   git clone https://github.com/microsoft/vcpkg.git
+   cd vcpkg
+   .\bootstrap-vcpkg.bat
+   ```
+
+2. **Install Dependencies**:
+   ```powershell
+   .\vcpkg install sdl2 sdl2-ttf
+   ```
+
+3. **Build the Project**:
+   ```powershell
+   # From the project root
+   # Note: Replace C:/path/to/vcpkg with your actual vcpkg installation path
+   cmake -B build -G "Visual Studio 17 2022" -DCMAKE_TOOLCHAIN_FILE=C:/vcpkg/scripts/buildsystems/vcpkg.cmake
+   cmake --build build --config Release
+   ```
+
+4. **Run**:
+   ```powershell
+   .\build\Release\plotter.exe "sin(x)"
+   ```
+
+---
 
 ## Usage
 
-### GUI Plotting
+### GUI Mode
+
 ```bash
-# Plot a single function
-./plotter "x^2"
+# Windows
+.\build\Release\plotter.exe "x^3 - 3*x"
 
-# Plot multiple functions
-./plotter "sin(x), cos(x), x^2"
-
-# Plot with custom initial view
-./plotter "x^3 - 3*x" --range -5 5
+# Linux / macOS
+./build/plotter "sin(x), cos(x), tan(x)"
 ```
 
-### Command-Line Operations
-```bash
-# Evaluate expression at x=0
-./plotter -e "sin(pi/2)"
+### CLI Mode
 
-# Find roots of equation f(x) = 0
-./plotter -s "x^2 - 4"
+```bash
+# Evaluate at x = 0
+.\build\Release\plotter.exe -e "sin(pi/2)"
+# Output: 1
+
+# Find roots of f(x) = 0
+.\build\Release\plotter.exe -s "x^2 - 4"
+# Output: -2 2
+
+# Detailed solver output
+./build/plotter -s "x^3 - x" --verbose
 
 # Find intersections of f(x) = g(x)
-./plotter -i "x^2" "2*x + 1"
-
-# Explicit GUI plot
-./plotter -p "exp(-x^2)"
+.\build\Release\plotter.exe -i "x^2" "2*x + 1"
+# Output: -0.414214 2.414214
 ```
 
-### Options
-- `--range xmin xmax`: Set solving/plotting range
-- `--step value`: Set solver step size
-- `--precision value`: Set numeric precision
-- `--zoom-step value`: Zoom sensitivity (1.0-2.0)
-- `--zoom-min value`: Minimum zoom level
-- `--zoom-max value`: Maximum zoom level
-- `--scale mode`: Grid scaling (auto/fixed/loose/dense)
-- `--verbose`: Detailed solver output
+### All Options
 
-## Controls (GUI Mode)
+| Option | Description | Default |
+|--------|-------------|---------|
+| `--range xmin xmax` | Set solving/plotting range | -100 to 100 |
+| `--step value` | Solver step size | 0.1 |
+| `--precision value` | Numeric precision | 1e-6 |
+| `--zoom-step value` | Zoom sensitivity | 1.1 |
+| `--zoom-min value` | Minimum view range | 0.01 |
+| `--zoom-max value` | Maximum view range | 500 |
+| `--scale mode` | Grid scaling: `auto` / `fixed` / `loose` / `dense` | auto |
+| `--font path` | Custom font file path | System default |
+| `--verbose` | Detailed solver output | off |
 
-| Control | Action |
-|---------|--------|
-| Mouse Wheel | Zoom in/out |
-| Left/Right Arrows | Pan left/right |
-| Up/Down Arrows | Pan up/down |
-| `T` | Toggle tangent line |
-| `G` | Toggle grid |
-| `R` | Toggle roots display |
-| `E` | Toggle extrema display |
-| `Tab` | Cycle active function |
-| `ESC` or Close | Exit |
+---
 
-## Building
+## GUI Controls
 
-### Prerequisites
-- CMake 3.10+
-- SDL2 development libraries
-- SDL2_ttf development libraries
-- C++17 compatible compiler
+| Key | Action |
+|-----|--------|
+| Mouse Wheel | Zoom in / out |
+| Arrow Keys | Pan the viewport |
+| T | Toggle tangent line at cursor |
+| G | Toggle grid |
+| R | Toggle roots (zeros) display |
+| E | Toggle extrema (min/max) display |
+| Tab | Cycle through active function |
+| ESC | Quit |
 
-### Linux Build
-```bash
-# Install dependencies (Ubuntu/Debian)
-sudo apt-get install cmake libsdl2-dev libsdl2-ttf-dev
-
-# Build
-mkdir build
-cd build
-cmake ..
-make
-```
+---
 
 ## Architecture
 
-The application is structured into several modules:
+The project follows a modular pipeline design:
 
-- **Tokenizer**: Lexical analysis of mathematical expressions
-- **Parser**: Converts infix notation to postfix using shunting-yard algorithm
-- **Evaluator**: Executes postfix expressions with function and constant support
-- **Solver**: Numerical root finding using bisection and Newton-Raphson methods
-- **Renderer**: SDL2-based graphics rendering with adaptive curve plotting
-- **Numerical**: Derivative calculation and geometric computations
+```mermaid
+graph TD
+    %% Node Definitions
+    User([fa:fa-user User Input])
+    Main[fa:fa-cogs Main<br/><i>CLI/GUI Orchestrator</i>]
+    Expr[fa:fa-code Expression<br/><i>High-level Math Interface</i>]
+    Token[fa:fa-list Tokenizer<br/><i>Lexical Analysis</i>]
+    Parse[fa:fa-project-diagram Parser<br/><i>Shunting-Yard</i>]
+    Eval[fa:fa-microchip Evaluator<br/><i>Postfix Stack</i>]
+    Funcs[fa:fa-function Functions<br/><i>Math Functions Registry</i>]
+    Consts[fa:fa-pi Constants<br/><i>Named Constants</i>]
+    
+    Solve[fa:fa-search-plus Solver<br/><i>Roots/Intersections/Extrema</i>]
+    Num[fa:fa-calculator Numerical<br/><i>Derivatives/Tangents</i>]
+    Render[fa:fa-paint-brush Renderer<br/><i>SDL2 Visualization</i>]
+
+    %% Core Pipeline
+    User -- "f(x) string" --> Main
+    Main --> Expr
+    Expr --> Token
+    Expr --> Parse
+    Expr --> Eval
+    
+    %% Analysis Modules
+    Expr -- "f(x)" --> Solve
+    Expr -- "f(x)" --> Num
+    Expr -- "f(x)" --> Render
+    
+    subgraph CoreMath [Core Math Pipeline]
+        direction LR
+        Token --> Parse --> Eval
+        Eval -.-> Funcs
+        Eval -.-> Consts
+    end
+
+    subgraph Analysis [Mathematical Analysis]
+        direction TB
+        Solve
+        Num
+    end
+
+    subgraph Output [Output & Visualization]
+        direction TB
+        Solve -- "Roots/Intersections" --> CLI[fa:fa-terminal CLI Output]
+        Num -- "Tangents" --> GUI[fa:fa-desktop GUI Rendering]
+        Render -- "Curves/Grid" --> GUI
+        Expr -- "Direct Eval" --> CLI
+    end
+
+    %% Styling
+    style User fill:#f9f,stroke:#333,stroke-width:2px
+    style CoreMath fill:#e1f5fe,stroke:#01579b,stroke-dasharray: 5 5
+    style Analysis fill:#fff3e0,stroke:#ef6c00,stroke-dasharray: 5 5
+    style Output fill:#f1f8e9,stroke:#33691e
+    style GUI fill:#c8e6c9,stroke:#2e7d32,stroke-width:2px
+    style CLI fill:#fff9c4,stroke:#fbc02d,stroke-width:2px
+```
+
+### Module Breakdown
+
+| Module | File(s) | Description |
+|--------|---------|-------------|
+| **Main** | `main.cpp` | Entry point: CLI argument parsing, mode dispatch (-e/-s/-i/GUI), SDL2 GUI event loop |
+| **Expression** | `expression.h/cpp` | High-level math expression interface: tokenizes, parses, validates, and evaluates expressions |
+| **Tokenizer** | `tokenizer.h/cpp` | Lexical analysis: converts expression strings to tokens with implicit multiplication support |
+| **Parser** | `parser.h/cpp` | Shunting-Yard algorithm: converts infix token stream to postfix notation |
+| **Evaluator** | `evaluator.h/cpp` | Stack-based postfix evaluation engine with function and constant lookups |
+| **Functions** | `functions.h/cpp` | Registry of 18 built-in math functions (sin, cos, log, etc.) with domain validation |
+| **Constants** | `constants_registry.h/cpp` | Named constant registry (pi, e, phi) for symbolic math |
+| **Solver** | `solver.h/cpp` | Root-finding algorithms: bisection + Newton-Raphson for equations, intersections, extrema |
+| **Numerical** | `numerical.h/cpp` | Numerical differentiation using central differences and tangent line computation |
+| **Renderer** | `renderer.h/cpp` | SDL2 rendering engine: adaptive curve plotting, grid, axes, labels, legend, markers |
+
+### Key Algorithms
+
+- **Adaptive Curve Rendering**: Recursive subdivision based on screen-space error. Produces smooth curves with fewer samples where the function is linear, and more detail at curves and inflection points.
+- **Discontinuity Detection**: Slope-threshold check to avoid connecting asymptotes (e.g., `tan(x)` near pi/2).
+- **Hybrid Root Finding**: Bisection method for robustness, followed by Newton-Raphson for precision refinement.
+- **Nice Number Grid Scaling**: Grid lines snap to "nice" intervals (1, 2, 5 x 10^n) for readable axis labels.
+
+---
+
+## Project Structure
+
+```
+Simple-math-calculator-and-plotter/
+|-- CMakeLists.txt              # Cross-platform build configuration
+|-- LICENSE                     # MIT License
+|-- README.md
+|-- .gitignore
+|-- .github/
+|   +-- workflows/
+|       +-- build.yml           # CI/CD -- build and test on Linux, macOS, Windows
+|-- tests/
+|   +-- test_math.cpp           # Unit tests for the math pipeline
++-- src/
+    |-- main.cpp                # Entry point, CLI parsing, GUI event loop
+    |-- renderer.h/cpp          # SDL2 rendering engine
+    +-- math/
+        |-- tokenizer.h/cpp             # Lexical analysis
+        |-- parser.h/cpp                # Shunting-Yard parser
+        |-- evaluator.h/cpp             # Postfix evaluator
+        |-- expression.h/cpp            # Expression wrapper
+        |-- functions.h/cpp             # Function registry
+        |-- solver.h/cpp                # Root and intersection finding
+        |-- numerical.h/cpp             # Derivatives and tangents
+        |-- constants.h                 # Numeric epsilon constants
+        |-- constants_registry.h/cpp    # Named constants (pi, e, phi)
+        |-- result.h                    # EvalResult type
+        +-- geometry.h                  # Line struct (slope + intercept)
+```
+
+---
 
 ## Examples
 
-### Basic Functions
 ```bash
-./plotter "x^2, x^3, sqrt(x)"
-./plotter "sin(x), cos(x), tan(x)"
-```
+# Polynomial curves
+./plotter "x^2, x^3, x^4"
 
-### Complex Expressions
-```bash
-./plotter "sin(x^2) + cos(x^3)"
+# Trigonometric comparison
+./plotter "sin(x), cos(x)"
+
+# Damped oscillation
 ./plotter "exp(-x^2) * sin(10*x)"
+
+# Gaussian curve
+./plotter "exp(-x^2)"
+
+# Combined expression
+./plotter "sin(x^2) + cos(x^3)"
+
+# Root finding with details
+./plotter -s "x^3 - 6*x^2 + 11*x - 6" --verbose
 ```
 
-### Parametric Plots (via expressions)
+---
+
+## Testing
+
+The project includes a self-contained unit test suite (no external test framework required).
+Tests cover the full math pipeline: tokenizer, parser, evaluator, functions, constants,
+numerical differentiation, root-finding, and edge cases.
+
 ```bash
-./plotter "x*sin(x), x*cos(x)"
+# Build and run tests
+mkdir build && cd build
+cmake ..
+cmake --build .
+
+# Linux / macOS
+./tests
+
+# Windows
+.\Debug\tests.exe    # or .\Release\tests.exe
 ```
+
+Or use CTest:
+
+```bash
+cd build
+ctest --output-on-failure
+```
+
+### What is tested
+
+| Suite | Coverage |
+|-------|----------|
+| Tokenizer | Number/variable/operator/function/constant tokens, implicit multiplication, invalid characters, malformed numbers |
+| Parser | Postfix conversion, operator precedence, associativity, parentheses, unary minus, mismatched parens |
+| Evaluator | Arithmetic, variable substitution, division by zero, order of operations |
+| Functions | All 18 built-in functions, domain error detection (asin, sqrt, log), binary functions (pow, max, min, log with base) |
+| Constants | pi, e, phi values, usage in expressions |
+| Expression | Complex expressions, sin^2+cos^2 identity, nested functions, evalSafe |
+| Numerical | Derivatives of x^2, sin(x), x^3 at specific points, tangent line computation |
+| Solver | Root-finding (x^2-4, sin(x), x^3), detailed results, intersections, extrema |
+| Edge Cases | Empty expressions, large exponents, negative exponents, deep nesting |
+
+---
+
+## CI/CD
+
+This project uses GitHub Actions for automated building and testing on every push and pull request.
+The workflow runs on three platforms:
+
+| Platform | Compiler | Dependency Manager |
+|----------|----------|-------------------|
+| Ubuntu (latest) | GCC | apt |
+| macOS (latest) | Clang | Homebrew |
+| Windows (latest) | MSVC | vcpkg |
+
+See [`.github/workflows/build.yml`](.github/workflows/build.yml) for the full configuration.
+
+---
+
+## Technical Highlights
+
+- **Zero external math dependencies** -- all parsing, evaluation, and numerical methods implemented from scratch
+- **Cross-platform** -- builds and runs on Linux, macOS, and Windows with a single CMakeLists.txt
+- **CI/CD** -- automated build and test on three platforms via GitHub Actions
+- **Unit tested** -- comprehensive test suite covering all math modules with 50+ test cases
+- **Safe evaluation** -- `EvalResult` pattern provides structured error handling without exceptions in hot paths
+- **Domain-aware functions** -- `sqrt`, `log`, `asin`, `acos`, and `tan` return clear error messages for out-of-domain inputs
+- **Cross-platform font loading** -- automatic fallback chain across Linux, macOS, and Windows font paths
+- **Input validation** -- character whitelisting, parenthesis balancing, and nesting depth limits
+
+---
 
 ## License
 
-[MIT License](LICENSE)
+This project is licensed under the [MIT License](LICENSE).
+
+---
 
 ## Contributing
 
-Contributions welcome! Please ensure code follows the existing style and includes appropriate tests.
+Contributions are welcome. To get started:
 
-## Screenshots
-
-*[Add screenshots here when available]*
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/your-feature`)
+3. Commit your changes (`git commit -m "Add your feature"`)
+4. Push to the branch (`git push origin feature/your-feature`)
+5. Open a Pull Request

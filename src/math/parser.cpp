@@ -3,6 +3,7 @@
 #include <stdexcept>
 #include "tokenizer.h"
 
+
 int precedence(const std::string &op)
 {
 	if (op == "+" || op == "-")
@@ -20,7 +21,7 @@ std::vector<Token> toPostfix(const std::vector<Token> &infix)
 	std::vector<Token> stack;
 	std::vector<int> argCount;
 
-	TokenType prevType;
+	TokenType prevType = TokenType::Number; // Initialized to avoid C4701; actual usage is guarded by hasPrev
 	bool hasPrev = false;
 
 	for (const auto &token : infix)

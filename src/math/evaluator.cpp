@@ -16,7 +16,13 @@ EvalResult evalPostfix(
     {
         if (token.type == TokenType::Number)
         {
-            st.push(std::stod(token.value));
+            size_t pos;
+            double val = std::stod(token.value, &pos);
+            if (pos != token.value.length())
+            {
+                return EvalResult::failure("Invalid number format: " + token.value);
+            }
+            st.push(val);
         }
         else if (token.type == TokenType::Variable)
         {

@@ -1,6 +1,7 @@
 #include "renderer.h"
 #include "math/constants.h"
 #include <string>
+#include <cmath>
 #include <SDL2/SDL_ttf.h>
 
 static SDL_Color PALETTE[] = {
@@ -52,7 +53,6 @@ static void drawAdaptiveSegment(
 	}
 
 	double linearMidY = (y1 + y2) * 0.5;
-	double error = std::abs(midY - linearMidY);
 
 	// Convert error to screen space
 	int pyMidActual = mapY(midY, height, ymin, ymax);
@@ -379,8 +379,18 @@ void drawAxisLabels(
 
 		SDL_Surface *surface =
 			TTF_RenderText_Solid(font, text.c_str(), color);
+
+		if (!surface)
+			continue;
+
 		SDL_Texture *texture =
 			SDL_CreateTextureFromSurface(renderer, surface);
+
+		if (!texture)
+		{
+			SDL_FreeSurface(surface);
+			continue;
+		}
 
 		SDL_Rect dst{
 			px - surface->w / 2,
@@ -412,8 +422,18 @@ void drawAxisLabels(
 
 		SDL_Surface *surface =
 			TTF_RenderText_Solid(font, text.c_str(), color);
+
+		if (!surface)
+			continue;
+
 		SDL_Texture *texture =
 			SDL_CreateTextureFromSurface(renderer, surface);
+
+		if (!texture)
+		{
+			SDL_FreeSurface(surface);
+			continue;
+		}
 
 		SDL_Rect dst{
 			originX + 6,

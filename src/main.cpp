@@ -4,6 +4,7 @@
 #include <vector>
 #include <string>
 #include <cmath>
+#include <cstdio>
 #include <iomanip>
 #include <algorithm>
 
@@ -16,32 +17,6 @@
 constexpr double DEFAULT_MIN_VIEW_RANGE = 0.01;
 constexpr double DEFAULT_MAX_VIEW_RANGE = 500.0;
 constexpr double Y_AUTO_CLAMP = 10.0;
-
-static bool validateExpression(const std::string &expr) {
-    // Length limit
-    if (expr.length() > 1000) {
-        return false;
-    }
-    
-    // Character whitelist
-    const std::string allowedChars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789.+-*/^(),x ";
-    for (char c : expr) {
-        if (allowedChars.find(c) == std::string::npos) {
-            return false;
-        }
-    }
-    
-    // Check for balanced parentheses
-    int parenCount = 0;
-    for (char c : expr) {
-        if (c == '(') parenCount++;
-        if (c == ')') parenCount--;
-        if (parenCount < 0) return false;
-    }
-    if (parenCount != 0) return false;
-    
-    return true;
-}
 
 static int cliError(const std::string &msg, int code)
 {
@@ -134,10 +109,7 @@ static bool validateExpression(const std::string &expr)
             hasX = true;
         }
     }
-
-    if (parenDepth != 0) return false;
-
-    return true;
+    return parenDepth == 0;
 }
 
 struct CliConfig
@@ -158,23 +130,28 @@ struct CliConfig
 
 void printHelp()
 {
-    std::cout << "Usage:\n"
-                 "  plotter \"expr\"              Plot expression in GUI\n"
-                 "  plotter -e \"expr\"           Evaluate expression at x = 0\n"
-                 "  plotter -s \"expr\"           Solve expr = 0\n"
-                 "  plotter -i \"f(x)\" \"g(x)\"  Solve f(x) = g(x)\n"
-                 "  plotter -p \"expr\"           Explicit GUI plot\n"
-                 "  plotter --help                Show this help\n\n"
-                 "Options:\n"
-                 "  --range xmin xmax       Set solving range (CLI only)\n"
-                 "  --step value            Set solver step size\n"
-                 "  --precision value       Set numeric precision\n"
-                 "  --zoom-step value       Zoom sensitivity (default 1.1, range: 1.0-2.0)\n"
-                 "  --zoom-min value        Minimum view range (default 0.01)\n"
-                 "  --zoom-max value        Maximum view range (default 500)\n"
-                 "  --verbose               Show detailed output\n"
-                 "  --scale mode            Grid/label scale: auto|fixed|loose|dense\n"
-                 "  --font path             Font file path for GUI text\n";
+    std::cout << "Math Function Plotter & Solver\n"
+              << "==============================\n\n"
+              << "Usage:\n"
+              << "  plotter [options] \"expression\"      Plot one or more functions (comma-separated)\n"
+              << "  plotter -e \"expr\"                  Evaluate expression at x = 0\n"
+              << "  plotter -s \"expr\"                  Find roots (x where expr = 0)\n"
+              << "  plotter -i \"f(x)\" \"g(x)\"           Find intersections where f(x) = g(x)\n"
+              << "  plotter --help                     Show this help screen\n\n"
+              << "Options:\n"
+              << "  --range xmin xmax       Set range for solver/evaluator (default: -100 to 100)\n"
+              << "  --step value            Set iteration step size for solver (default: 0.1)\n"
+              << "  --precision value       Set target numeric precision (default: 1e-6)\n"
+              << "  --zoom-step value       Scroll zoom sensitivity (1.0 - 2.0, default: 1.1)\n"
+              << "  --zoom-min value        Minimum zoom-in range (default: 0.01)\n"
+              << "  --zoom-max value        Maximum zoom-out range (default: 500.0)\n"
+              << "  --scale <mode>          Grid scaling mode: auto | fixed | loose | dense\n"
+              << "  --font <path>           Path to a custom .ttf font file\n"
+              << "  --verbose               Show detailed convergence data for solver\n\n"
+              << "Examples:\n"
+              << "  plotter \"sin(x), cos(x)\"\n"
+              << "  plotter -s \"x^2 - 4\" --range -5 5\n"
+              << "  plotter --scale fixed \"x^2\"\n";
 }
 
 int main(int argc, char **argv)
@@ -198,8 +175,15 @@ int main(int argc, char **argv)
             {
                 return cliError("--range requires xmin xmax", 2);
             }
-            cfg.xmin = std::stod(argv[++i]);
-            cfg.xmax = std::stod(argv[++i]);
+            try
+            {
+                cfg.xmin = std::stod(argv[++i]);
+                cfg.xmax = std::stod(argv[++i]);
+            }
+            catch (const std::exception &)
+            {
+                return cliError("--range requires numeric values", 2);
+            }
             if (cfg.xmin >= cfg.xmax)
             {
                 return cliError("invalid range: xmin >= xmax", 2);
@@ -211,7 +195,14 @@ int main(int argc, char **argv)
             {
                 return cliError("--step requires value", 2);
             }
-            cfg.step = std::stod(argv[++i]);
+            try
+            {
+                cfg.step = std::stod(argv[++i]);
+            }
+            catch (const std::exception &)
+            {
+                return cliError("--step requires a numeric value", 2);
+            }
             if (cfg.step <= 0)
             {
                 return cliError("step must be > 0", 2);
@@ -223,7 +214,14 @@ int main(int argc, char **argv)
             {
                 return cliError("--precision requires value", 2);
             }
-            cfg.precision = std::stod(argv[++i]);
+            try
+            {
+                cfg.precision = std::stod(argv[++i]);
+            }
+            catch (const std::exception &)
+            {
+                return cliError("--precision requires a numeric value", 2);
+            }
             if (cfg.precision <= 0)
             {
                 return cliError("precision must be > 0", 2);
@@ -235,7 +233,14 @@ int main(int argc, char **argv)
             {
                 return cliError("--zoom-step requires a value", 2);
             }
-            cfg.zoomStep = std::stod(argv[++i]);
+            try
+            {
+                cfg.zoomStep = std::stod(argv[++i]);
+            }
+            catch (const std::exception &)
+            {
+                return cliError("--zoom-step requires a numeric value", 2);
+            }
             if (cfg.zoomStep <= 1.0 || cfg.zoomStep > 2.0)
             {
                 return cliError("--zoom-step must be in range (1.0, 2.0]", 2);
@@ -247,7 +252,14 @@ int main(int argc, char **argv)
             {
                 return cliError("--zoom-min requires a value", 2);
             }
-            cfg.zoomMin = std::stod(argv[++i]);
+            try
+            {
+                cfg.zoomMin = std::stod(argv[++i]);
+            }
+            catch (const std::exception &)
+            {
+                return cliError("--zoom-min requires a numeric value", 2);
+            }
             if (cfg.zoomMin <= 0)
             {
                 return cliError("--zoom-min must be > 0", 2);
@@ -259,7 +271,14 @@ int main(int argc, char **argv)
             {
                 return cliError("--zoom-max requires a value", 2);
             }
-            cfg.zoomMax = std::stod(argv[++i]);
+            try
+            {
+                cfg.zoomMax = std::stod(argv[++i]);
+            }
+            catch (const std::exception &)
+            {
+                return cliError("--zoom-max requires a numeric value", 2);
+            }
             if (cfg.zoomMax <= cfg.zoomMin)
             {
                 return cliError("--zoom-max must be > zoom-min", 2);
@@ -411,6 +430,10 @@ int main(int argc, char **argv)
         auto parts = splitExpressions(exprStr);
         for (const auto &p : parts)
         {
+            if (!validateExpression(p))
+            {
+                return cliError("invalid expression syntax: " + p, 2);
+            }
             expressions.emplace_back(p);
             expressionLabels.push_back(p);
         }
@@ -475,10 +498,9 @@ int main(int argc, char **argv)
 
     TTF_Font *font = nullptr;
     for (const auto &path : fontPaths) {
-        font = TTF_OpenFont(path.c_str(), 12);
-        if (font) {
-            break;
-        }
+        if (path.empty()) continue;
+        font = TTF_OpenFont(path.c_str(), 14);
+        if (font) break;
     }
 
     if (!font) {
@@ -612,6 +634,9 @@ int main(int argc, char **argv)
                     ymin += pan;
                     ymax += pan;
                     break;
+                case SDLK_ESCAPE:
+                    running = false;
+                    break;
                 case SDLK_DOWN:
                     ymin -= pan;
                     ymax -= pan;
@@ -717,9 +742,9 @@ int main(int argc, char **argv)
             }
 
             // Mouse coordinate overlay
-            std::string coordText =
-                "x=" + std::to_string(mouseMathX).substr(0, 6) +
-                ", y=" + std::to_string(mouseMathY).substr(0, 6);
+            char coordBuf[64];
+            std::snprintf(coordBuf, sizeof(coordBuf), "x=%.4f, y=%.4f", mouseMathX, mouseMathY);
+            std::string coordText(coordBuf);
 
             if (coordText != lastCoordText)
             {

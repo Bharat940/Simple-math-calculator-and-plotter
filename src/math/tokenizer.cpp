@@ -48,10 +48,20 @@ std::vector<Token> tokenize(const std::string &expr)
         if (std::isdigit(expr[i]) || expr[i] == '.')
         {
             std::string number;
+            bool hasDot = false;
 
             while (i < expr.length() &&
                    (std::isdigit(expr[i]) || expr[i] == '.'))
             {
+                if (expr[i] == '.')
+                {
+                    if (hasDot)
+                    {
+                        throw std::runtime_error(
+                            "Invalid number format: multiple decimal points");
+                    }
+                    hasDot = true;
+                }
                 number += expr[i];
                 ++i;
             }
@@ -75,7 +85,10 @@ std::vector<Token> tokenize(const std::string &expr)
         {
             std::string name;
 
-            while (i < expr.length() && std::isalpha(expr[i]))
+            // First char must be alpha; subsequent chars can be alphanumeric
+            // This supports names like "log10", "log2", etc.
+            while (i < expr.length() &&
+                   (std::isalpha(expr[i]) || std::isdigit(expr[i])))
             {
                 name += expr[i];
                 ++i;

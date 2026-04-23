@@ -1,0 +1,104 @@
+name: Build and Test
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+# Prevent multiple builds from running at the same time on the same branch
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-linux:
+    name: Linux (GCC)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y cmake g++ libsdl2-dev libsdl2-ttf-dev
+
+      - name: Configure
+        run: cmake -B build -DCMAKE_BUILD_TYPE=Release
+
+      - name: Build
+        run: cmake --build build --config Release
+
+      - name: Run tests
+        run: ./build/tests
+
+      - name: Upload Linux Binaries
+        uses: actions/upload-artifact@v4
+        with:
+          name: plotter-linux-x64
+          path: |
+            build/plotter
+            build/tests
+
+  build-macos:
+    name: macOS (Clang)
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: brew install sdl2 sdl2_ttf
+
+      - name: Configure
+        run: cmake -B build -DCMAKE_BUILD_TYPE=Release
+
+      - name: Build
+        run: cmake --build build --config Release
+
+      - name: Run tests
+        run: ./build/tests
+
+      - name: Upload macOS Binaries
+        uses: actions/upload-artifact@v4
+        with:
+          name: plotter-macos-arm64
+          path: |
+            build/plotter
+            build/tests
+
+  build-windows:
+    name: Windows (MSVC + vcpkg)
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup vcpkg
+        uses: lukka/run-vcpkg@v11
+        with:
+          vcpkgGitCommitId: 'a42af01b72c28a8e1d7b48107b33e4f286a55ef6'
+
+      - name: Install dependencies
+        run: vcpkg install sdl2 sdl2-ttf --triplet x64-windows
+
+      - name: Configure
+        run: cmake -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE=${{ github.workspace }}/vcpkg/scripts/buildsystems/vcpkg.cmake
+
+      - name: Build
+        run: cmake --build build --config Release
+
+      - name: Run tests
+        run: .\build\Release\tests.exe
+
+      - name: Upload Windows Binaries
+        uses: actions/upload-artifact@v4
+        with:
+          name: plotter-windows-x64
+          path: |
+            build/Release/plotter.exe
+            build/Release/tests.exe

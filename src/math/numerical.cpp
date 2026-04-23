@@ -1,12 +1,18 @@
 #include "numerical.h"
 #include "geometry.h"
 #include <cmath>
+#include <limits>
 
 double derivative(
 	const Expression &expr,
 	double x,
 	double h)
 {
+	if (std::abs(h) < 1e-15)
+	{
+		return std::numeric_limits<double>::quiet_NaN();
+	}
+
 	double f_plus = expr.eval(x + h);
 	double f_minus = expr.eval(x - h);
 

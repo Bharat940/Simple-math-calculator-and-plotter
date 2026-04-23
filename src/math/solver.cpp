@@ -13,6 +13,7 @@ namespace
 		double step,
 		double eps)
 	{
+		(void)eps; // reserved for future tolerance tuning
 		std::vector<double> roots;
 
 		double x1 = left;
@@ -82,6 +83,7 @@ namespace
 		double eps,
 		int maxIter = 10)
 	{
+		(void)eps; // tolerance set by EPS_ROOT constants
 		double x = x0;
 
 		for (int i = 0; i < maxIter; ++i)

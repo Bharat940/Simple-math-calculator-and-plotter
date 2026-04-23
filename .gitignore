@@ -1,17 +1,45 @@
 # Build artifacts
-build/
+build*/
+out/
+bin/
+obj/
 CMakeCache.txt
 CMakeFiles/
 cmake_install.cmake
 Makefile
 *.o
-plotter
+*.obj
+*.exe
+*.dll
+*.lib
+*.pdb
+# Compiled Binaries (Linux/macOS)
+/plotter
+!/plotter/
+/tests
+!/tests/
+/tests_math
+
+# Dependency managers
+vcpkg_installed/
+vcpkg/
+
 
 # IDE files
 .vscode/
 .idea/
+.vs/
 *.swp
 *.swo
+.cache/
+compile_commands.json
+*.sln
+*.vcxproj
+*.vcxproj.filters
+*.vcxproj.user
+*.suo
+*.db
+*.opendb
 
 # OS files
 .DS_Store
