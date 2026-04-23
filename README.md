@@ -14,6 +14,9 @@
   <img src="https://img.shields.io/badge/Platform-Linux%20%7C%20macOS%20%7C%20Windows-lightgrey?style=flat-square" alt="Platform">
   <br>
   <img src="https://github.com/Bharat940/Simple-math-calculator-and-plotter/actions/workflows/build.yml/badge.svg" alt="Build and Test">
+  <a href="https://github.com/Bharat940/Simple-math-calculator-and-plotter/releases/tag/v0.0.1">
+    <img src="https://img.shields.io/badge/Release-v0.0.1-blue?style=flat-square&logo=github" alt="Latest Release">
+  </a>
 </p>
 
 ---
@@ -67,15 +70,8 @@
 ### Linux
 
 ```bash
-# Install dependencies
-# Ubuntu / Debian
+# Install dependencies (Ubuntu / Debian)
 sudo apt-get install cmake g++ libsdl2-dev libsdl2-ttf-dev
-
-# Fedora
-sudo dnf install cmake gcc-c++ SDL2-devel SDL2_ttf-devel
-
-# Arch Linux
-sudo pacman -S cmake sdl2 sdl2_ttf
 
 # Build
 git clone https://github.com/Bharat940/Simple-math-calculator-and-plotter.git
@@ -107,27 +103,20 @@ make
 
 **Recommended: vcpkg + Visual Studio 2022**
 
-1. **Install vcpkg** (if not already installed):
+1. **Install Dependencies via vcpkg**:
    ```powershell
-   git clone https://github.com/microsoft/vcpkg.git
-   cd vcpkg
-   .\bootstrap-vcpkg.bat
+   vcpkg install sdl2 sdl2-ttf --triplet x64-windows
    ```
 
-2. **Install Dependencies**:
-   ```powershell
-   .\vcpkg install sdl2 sdl2-ttf
-   ```
-
-3. **Build the Project**:
+2. **Build the Project**:
    ```powershell
    # From the project root
-   # Note: Replace C:/path/to/vcpkg with your actual vcpkg installation path
+   # Note: Replace C:/vcpkg/ with your actual vcpkg installation path if different
    cmake -B build -G "Visual Studio 17 2022" -DCMAKE_TOOLCHAIN_FILE=C:/vcpkg/scripts/buildsystems/vcpkg.cmake
    cmake --build build --config Release
    ```
 
-4. **Run**:
+3. **Run**:
    ```powershell
    .\build\Release\plotter.exe "sin(x)"
    ```
@@ -354,14 +343,7 @@ cmake --build .
 ./tests
 
 # Windows
-.\Debug\tests.exe    # or .\Release\tests.exe
-```
-
-Or use CTest:
-
-```bash
-cd build
-ctest --output-on-failure
+.\build\Release\tests.exe
 ```
 
 ### What is tested
@@ -380,31 +362,34 @@ ctest --output-on-failure
 
 ---
 
-## CI/CD
-
-This project uses GitHub Actions for automated building and testing on every push and pull request.
-The workflow runs on three platforms:
-
-| Platform | Compiler | Dependency Manager |
-|----------|----------|-------------------|
-| Ubuntu (latest) | GCC | apt |
-| macOS (latest) | Clang | Homebrew |
-| Windows (latest) | MSVC | vcpkg |
-
-See [`.github/workflows/build.yml`](.github/workflows/build.yml) for the full configuration.
-
----
-
 ## Technical Highlights
 
 - **Zero external math dependencies** -- all parsing, evaluation, and numerical methods implemented from scratch
 - **Cross-platform** -- builds and runs on Linux, macOS, and Windows with a single CMakeLists.txt
 - **CI/CD** -- automated build and test on three platforms via GitHub Actions
-- **Unit tested** -- comprehensive test suite covering all math modules with 50+ test cases
-- **Safe evaluation** -- `EvalResult` pattern provides structured error handling without exceptions in hot paths
-- **Domain-aware functions** -- `sqrt`, `log`, `asin`, `acos`, and `tan` return clear error messages for out-of-domain inputs
-- **Cross-platform font loading** -- automatic fallback chain across Linux, macOS, and Windows font paths
-- **Input validation** -- character whitelisting, parenthesis balancing, and nesting depth limits
+- **Unit tested** -- comprehensive test suite covering all math modules with 119 passing tests
+- **Safe evaluation** — `EvalResult` pattern provides structured error handling without exceptions in hot paths
+- **Domain-aware functions** — `sqrt`, `log`, `asin`, `acos`, and `tan` return clear error messages for out-of-domain inputs
+- **Cross-platform font loading** — automatic fallback chain across Linux, macOS, and Windows font paths
+- **Input validation** — character whitelisting, parenthesis balancing, and nesting depth limits
+
+---
+
+## Download & Releases
+
+The latest compiled binaries for Windows, Linux, and macOS are available in the [Releases](https://github.com/Bharat940/Simple-math-calculator-and-plotter/releases/tag/v0.0.1) section.
+
+---
+
+## Contributing
+
+Contributions are welcome! Whether you're fixing a bug, suggesting a feature, or improving documentation, here's how you can help:
+
+1.  **Fork** the repository.
+2.  Create a **feature branch** (`git checkout -b feature/AmazingFeature`).
+3.  **Commit** your changes (`git commit -m 'Add AmazingFeature'`).
+4.  **Push** to the branch (`git push origin feature/AmazingFeature`).
+5.  Open a **Pull Request**.
 
 ---
 
@@ -414,12 +399,8 @@ This project is licensed under the [MIT License](LICENSE).
 
 ---
 
-## Contributing
+## Author
 
-Contributions are welcome. To get started:
-
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/your-feature`)
-3. Commit your changes (`git commit -m "Add your feature"`)
-4. Push to the branch (`git push origin feature/your-feature`)
-5. Open a Pull Request
+**Bharat Dangi**  
+📧 [bdangi450@gmail.com](mailto:bdangi450@gmail.com)  
+🔗 [github.com/Bharat940](https://github.com/Bharat940)
