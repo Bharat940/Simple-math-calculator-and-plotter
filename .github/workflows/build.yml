@@ -2,14 +2,18 @@ name: Build, Test & Release
 
 on:
   push:
-    branches: [ main, master, v2-engine-rewrite ]
+    branches: [ main, master, v0.2.0-ast-rewrite ]
     tags: [ 'v*' ]
   pull_request:
     branches: [ main, master ]
 
+permissions:
+  contents: write
+
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
+
 
 jobs:
   build-linux:
