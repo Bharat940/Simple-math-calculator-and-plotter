@@ -240,3 +240,39 @@ std::vector<double> findExtrema(
 		},
 		left, right, step, eps);
 }
+
+std::vector<ExtremaResult> findExtremaDetailed(
+	const Expression &expr,
+	double left,
+	double right,
+	double step,
+	double eps)
+{
+	auto extremaXs = findExtrema(expr, left, right, step, eps);
+	std::vector<ExtremaResult> results;
+
+	for (double x : extremaXs)
+	{
+		double y = expr.eval(x);
+		// Approximate second derivative using central difference:
+		double h = 1e-4;
+		double f_plus = expr.eval(x + h);
+		double f_minus = expr.eval(x - h);
+		double fpp = (f_plus - 2.0 * y + f_minus) / (h * h);
+
+		ExtremaKind kind = ExtremaKind::Unknown;
+		if (std::isfinite(fpp))
+		{
+			if (fpp > 1e-4)
+				kind = ExtremaKind::LocalMin;
+			else if (fpp < -1e-4)
+				kind = ExtremaKind::LocalMax;
+			else
+				kind = ExtremaKind::Saddle;
+		}
+
+		results.push_back({x, y, kind});
+	}
+
+	return results;
+}

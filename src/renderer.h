@@ -69,8 +69,12 @@ void drawLine(
     double ymin,
     double ymax);
 
+void setDiscontinuityThreshold(double threshold);
+double getDiscontinuityThreshold();
+
 void drawRoots(
     SDL_Renderer *renderer,
+    TTF_Font *font,
     const std::vector<double> &roots,
     int width,
     int height,
@@ -81,6 +85,7 @@ void drawRoots(
 
 void drawExtrema(
     SDL_Renderer *renderer,
+    TTF_Font *font,
     const Expression &expr,
     const std::vector<double> &extrema,
     int width,

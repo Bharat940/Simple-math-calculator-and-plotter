@@ -469,6 +469,45 @@ static void testEdgeCases()
     }
 }
 
+static void testV11Features()
+{
+    TEST_SUITE("v1.1 Features");
+
+    // Scientific notation
+    CHECK_APPROX(evalExpr("1e5"), 100000.0, 1e-9, "1e5 = 100000");
+    CHECK_APPROX(evalExpr("1e-5"), 0.00001, 1e-12, "1e-5 = 0.00001");
+    CHECK_APPROX(evalExpr("2.5e3"), 2500.0, 1e-9, "2.5e3 = 2500");
+    CHECK_APPROX(evalExpr("3E2"), 300.0, 1e-9, "3E2 = 300");
+
+    // Tau constant
+    CHECK_APPROX(evalExpr("tau"), 6.283185307179586, 1e-10, "tau = 2*pi");
+    CHECK_APPROX(evalExpr("tau - 2*pi"), 0.0, 1e-10, "tau - 2*pi = 0");
+
+    // Precedence and associativity
+    CHECK_APPROX(evalExpr("2+3*4"), 14.0, 1e-9, "2+3*4 = 14 (not 20)");
+    CHECK_APPROX(evalExpr("2^3^2"), 512.0, 1e-9, "2^3^2 = 512 (right-associative)");
+    Expression negPow("-x^2");
+    CHECK_APPROX(negPow.eval(2.0), -4.0, 1e-9, "-x^2 at x=2 is -4");
+
+    // Extrema classification
+    Expression parMin("x^2");
+    auto extMin = findExtremaDetailed(parMin, -5.0, 5.0);
+    CHECK(extMin.size() >= 1, "findExtremaDetailed finds minimum of x^2");
+    if (!extMin.empty())
+    {
+        CHECK(extMin[0].kind == ExtremaKind::LocalMin, "x^2 extrema at 0 is LocalMin");
+    }
+
+    Expression parMax("-x^2");
+    auto extMax = findExtremaDetailed(parMax, -5.0, 5.0);
+    CHECK(extMax.size() >= 1, "findExtremaDetailed finds maximum of -x^2");
+    if (!extMax.empty())
+    {
+        CHECK(extMax[0].kind == ExtremaKind::LocalMax, "-x^2 extrema at 0 is LocalMax");
+    }
+}
+
+
 // Main
 
 int main()
@@ -485,6 +524,8 @@ int main()
     testNumerical();
     testSolver();
     testEdgeCases();
+    testV11Features();
+
 
     std::cout << std::string(50, '-') << std::endl;
     std::cout << "Results: " << g_passed << " passed, "

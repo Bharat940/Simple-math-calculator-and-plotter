@@ -1,5 +1,19 @@
 #include <SDL.h>
 #include <SDL_ttf.h>
+#include "renderer.h"
+
+#ifdef _WIN32
+#ifndef NOMINMAX
+#define NOMINMAX
+#endif
+#include <windows.h>
+#include <dwmapi.h>
+#include <SDL_syswm.h>
+#ifndef DWMWA_USE_IMMERSIVE_DARK_MODE
+#define DWMWA_USE_IMMERSIVE_DARK_MODE 20
+#endif
+#endif
+
 #include <iostream>
 #include <vector>
 #include <string>
@@ -10,7 +24,6 @@
 
 #include "math/numerical.h"
 #include "math/solver.h"
-#include "renderer.h"
 #include "math/expression.h"
 
 // Hard zoom limits (defaults)
@@ -73,7 +86,7 @@ static bool validateExpression(const std::string &expr)
     }
 
     // Character whitelist
-    static const std::string allowedChars = 
+    static const std::string allowedChars =
         "abcdefghijklmnopqrstuvwxyz"
         "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
         "0123456789"
@@ -89,7 +102,6 @@ static bool validateExpression(const std::string &expr)
 
     // Basic structure checks
     int parenDepth = 0;
-    bool hasX = false;
 
     for (size_t i = 0; i < expr.length(); ++i)
     {
@@ -97,22 +109,21 @@ static bool validateExpression(const std::string &expr)
         if (c == '(')
         {
             parenDepth++;
-            if (parenDepth > 10) return false; // Max nesting
+            if (parenDepth > 10)
+                return false; // Max nesting
         }
         else if (c == ')')
         {
             parenDepth--;
-            if (parenDepth < 0) return false;
-        }
-        else if (c == 'x')
-        {
-            hasX = true;
+            if (parenDepth < 0)
+                return false;
         }
     }
     return parenDepth == 0;
 }
 
 struct CliConfig
+
 {
     double xmin = -100.0;
     double xmax = 100.0;
@@ -125,19 +136,20 @@ struct CliConfig
     double zoomMax = DEFAULT_MAX_VIEW_RANGE;
 
     ScaleMode scaleMode = ScaleMode::Auto;
+    double discThreshold = 10000.0;
     std::string fontPath;
 };
 
 void printHelp()
 {
-    std::cout << "Math Function Plotter & Solver\n"
-              << "==============================\n\n"
+    std::cout << "MathStudio — Math Function Plotter & Solver\n"
+              << "============================================\n\n"
               << "Usage:\n"
-              << "  plotter [options] \"expression\"      Plot one or more functions (comma-separated)\n"
-              << "  plotter -e \"expr\"                  Evaluate expression at x = 0\n"
-              << "  plotter -s \"expr\"                  Find roots (x where expr = 0)\n"
-              << "  plotter -i \"f(x)\" \"g(x)\"           Find intersections where f(x) = g(x)\n"
-              << "  plotter --help                     Show this help screen\n\n"
+              << "  mathstudio [options] \"expression\"      Plot one or more functions (comma-separated)\n"
+              << "  mathstudio -e \"expr\"                  Evaluate expression at x = 0\n"
+              << "  mathstudio -s \"expr\"                  Find roots (x where expr = 0)\n"
+              << "  mathstudio -i \"f(x)\" \"g(x)\"           Find intersections where f(x) = g(x)\n"
+              << "  mathstudio --help                     Show this help screen\n\n"
               << "Options:\n"
               << "  --range xmin xmax       Set range for solver/evaluator (default: -100 to 100)\n"
               << "  --step value            Set iteration step size for solver (default: 0.1)\n"
@@ -148,10 +160,16 @@ void printHelp()
               << "  --scale <mode>          Grid scaling mode: auto | fixed | loose | dense\n"
               << "  --font <path>           Path to a custom .ttf font file\n"
               << "  --verbose               Show detailed convergence data for solver\n\n"
+              << "Variables:\n"
+              << "  x   standard variable (e.g. sin(x))\n"
+              << "  t   time variable for signals (e.g. sin(2*pi*t))\n"
+              << "  n   discrete index variable (e.g. sin(n*pi/4))\n\n"
+              << "Constants: pi, e, phi, tau (= 2*pi)\n\n"
               << "Examples:\n"
-              << "  plotter \"sin(x), cos(x)\"\n"
-              << "  plotter -s \"x^2 - 4\" --range -5 5\n"
-              << "  plotter --scale fixed \"x^2\"\n";
+              << "  mathstudio \"sin(x), cos(x)\"\n"
+              << "  mathstudio -s \"x^2 - 4\" --range -5 5\n"
+              << "  mathstudio --scale fixed \"x^2\"\n"
+              << "  mathstudio \"sin(2*pi*t)\"\n";
 }
 
 int main(int argc, char **argv)
@@ -288,6 +306,26 @@ int main(int argc, char **argv)
         {
             cfg.verbose = true;
         }
+        else if (arg == "--disc-threshold")
+        {
+            if (i + 1 >= argc)
+            {
+                return cliError("--disc-threshold requires a value", 2);
+            }
+            try
+            {
+                cfg.discThreshold = std::stod(argv[++i]);
+            }
+            catch (const std::exception &)
+            {
+                return cliError("--disc-threshold requires a numeric value", 2);
+            }
+            if (cfg.discThreshold <= 0)
+            {
+                return cliError("--disc-threshold must be > 0", 2);
+            }
+        }
+
         else if (arg == "--scale")
         {
             if (i + 1 >= argc)
@@ -444,7 +482,9 @@ int main(int argc, char **argv)
     }
 
     // SDL setup
+    SDL_SetHint(SDL_HINT_WINDOWS_DPI_AWARENESS, "permonitorv2");
     if (SDL_Init(SDL_INIT_VIDEO) != 0)
+
     {
         std::cerr << "SDL_Init Error: " << SDL_GetError() << std::endl;
         return 1;
@@ -458,23 +498,39 @@ int main(int argc, char **argv)
     }
 
     SDL_Window *window = SDL_CreateWindow(
-        "Function Plotter",
+        "MathStudio",
         SDL_WINDOWPOS_CENTERED,
         SDL_WINDOWPOS_CENTERED,
-        800, 600,
-        SDL_WINDOW_SHOWN);
+        1280, 720,
+        SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE);
 
-    if (!window) {
+    if (!window)
+    {
         std::cerr << "SDL_CreateWindow Error: " << SDL_GetError() << std::endl;
         TTF_Quit();
         SDL_Quit();
         return 1;
     }
 
+    SDL_SetWindowBordered(window, SDL_TRUE);
+    SDL_SetWindowResizable(window, SDL_TRUE);
+
+#ifdef _WIN32
+    SDL_SysWMinfo wmInfo;
+    SDL_VERSION(&wmInfo.version);
+    if (SDL_GetWindowWMInfo(window, &wmInfo))
+    {
+        HWND hwnd = wmInfo.info.win.window;
+        BOOL useDarkMode = TRUE;
+        DwmSetWindowAttribute(hwnd, DWMWA_USE_IMMERSIVE_DARK_MODE, &useDarkMode, sizeof(useDarkMode));
+    }
+#endif
+
     SDL_Renderer *renderer = SDL_CreateRenderer(
         window, -1, SDL_RENDERER_ACCELERATED);
 
-    if (!renderer) {
+    if (!renderer)
+    {
         std::cerr << "SDL_CreateRenderer Error: " << SDL_GetError() << std::endl;
         SDL_DestroyWindow(window);
         TTF_Quit();
@@ -484,28 +540,34 @@ int main(int argc, char **argv)
 
     // Font loading with fallbacks
     std::vector<std::string> fontPaths;
-    if (!cfg.fontPath.empty()) {
+    if (!cfg.fontPath.empty())
+    {
         fontPaths.push_back(cfg.fontPath);
     }
     fontPaths.insert(fontPaths.end(), {
-        "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
-        "/usr/share/fonts/TTF/DejaVuSans.ttf",
-        "/usr/share/fonts/truetype/liberation/LiberationSans-Regular.ttf",
-        "/usr/share/fonts/TTF/LiberationSans-Regular.ttf",
-        "/System/Library/Fonts/Arial.ttf",  // macOS
-        "C:\\Windows\\Fonts\\arial.ttf"     // Windows
-    });
+                                          "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
+                                          "/usr/share/fonts/TTF/DejaVuSans.ttf",
+                                          "/usr/share/fonts/truetype/liberation/LiberationSans-Regular.ttf",
+                                          "/usr/share/fonts/TTF/LiberationSans-Regular.ttf",
+                                          "/System/Library/Fonts/Arial.ttf", // macOS
+                                          "C:\\Windows\\Fonts\\arial.ttf"    // Windows
+                                      });
 
     TTF_Font *font = nullptr;
-    for (const auto &path : fontPaths) {
-        if (path.empty()) continue;
+    for (const auto &path : fontPaths)
+    {
+        if (path.empty())
+            continue;
         font = TTF_OpenFont(path.c_str(), 14);
-        if (font) break;
+        if (font)
+            break;
     }
 
-    if (!font) {
+    if (!font)
+    {
         std::cerr << "Failed to load any font. Tried paths:" << std::endl;
-        for (const auto &path : fontPaths) {
+        for (const auto &path : fontPaths)
+        {
             std::cerr << "  " << path << std::endl;
         }
         std::cerr << "TTF Error: " << TTF_GetError() << std::endl;
@@ -535,8 +597,8 @@ int main(int argc, char **argv)
             double y = expr.eval(x);
             if (std::isfinite(y) && std::abs(y) <= Y_AUTO_CLAMP)
             {
-                minY = std::min(minY, y);
-                maxY = std::max(maxY, y);
+                minY = (std::min)(minY, y);
+                maxY = (std::max)(maxY, y);
             }
         }
     }
@@ -562,13 +624,16 @@ int main(int argc, char **argv)
 
     int mouseX = 0, mouseY = 0;
 
+
     std::string lastCoordText;
+
     SDL_Texture *coordTexture = nullptr;
     SDL_Rect coordRect{};
 
     SDL_Event event;
 
     setScaleMode(cfg.scaleMode);
+    setDiscontinuityThreshold(cfg.discThreshold);
 
     // Main loop
     while (running)
@@ -578,6 +643,22 @@ int main(int argc, char **argv)
             if (event.type == SDL_QUIT)
             {
                 running = false;
+            }
+
+            if (event.type == SDL_WINDOWEVENT)
+            {
+                if (event.window.event == SDL_WINDOWEVENT_RESIZED ||
+                    event.window.event == SDL_WINDOWEVENT_SIZE_CHANGED ||
+                    event.window.event == SDL_WINDOWEVENT_EXPOSED ||
+                    event.window.event == SDL_WINDOWEVENT_MAXIMIZED ||
+                    event.window.event == SDL_WINDOWEVENT_RESTORED)
+                {
+                    needsRedraw = true;
+                }
+                else if (event.window.event == SDL_WINDOWEVENT_CLOSE)
+                {
+                    running = false;
+                }
             }
 
             if (event.type == SDL_MOUSEWHEEL)
@@ -664,6 +745,24 @@ int main(int argc, char **argv)
                     showExtrema = !showExtrema;
                     needsRedraw = true;
                     break;
+                case SDLK_F11:
+                {
+                    Uint32 flags = SDL_GetWindowFlags(window);
+                    if (flags & (SDL_WINDOW_FULLSCREEN | SDL_WINDOW_FULLSCREEN_DESKTOP))
+                    {
+                        SDL_SetWindowFullscreen(window, 0);
+                        SDL_SetWindowBordered(window, SDL_TRUE);
+                        SDL_SetWindowResizable(window, SDL_TRUE);
+                        SDL_SetWindowSize(window, 1280, 720);
+                        SDL_SetWindowPosition(window, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED);
+                    }
+                    else
+                    {
+                        SDL_SetWindowFullscreen(window, SDL_WINDOW_FULLSCREEN_DESKTOP);
+                    }
+                    needsRedraw = true;
+                    break;
+                }
                 }
 
                 rootsDirty = true;
@@ -678,6 +777,7 @@ int main(int argc, char **argv)
                 needsRedraw = true;
             }
         }
+
 
         if (needsRedraw)
         {
@@ -705,7 +805,8 @@ int main(int argc, char **argv)
             double mouseMathX = screenToMathX(mouseX, width, xmin, xmax);
             double mouseMathY = screenToMathY(mouseY, height, ymin, ymax);
 
-            SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
+            // Deep Slate Obsidian Dark Mode background
+            SDL_SetRenderDrawColor(renderer, 20, 22, 28, 255);
             SDL_RenderClear(renderer);
 
             if (showGrid)
@@ -714,7 +815,10 @@ int main(int argc, char **argv)
             }
             drawAxes(renderer, width, height, xmin, xmax, ymin, ymax);
             drawAxisLabels(renderer, font, width, height, xmin, xmax, ymin, ymax);
+
+            // Legend (sin(x), cos(x)) is ALWAYS shown
             drawLegend(renderer, font, expressionLabels, activeExpr);
+
 
             for (size_t i = 0; i < expressions.size(); ++i)
             {
@@ -733,11 +837,11 @@ int main(int argc, char **argv)
             {
                 if (showRoots)
                 {
-                    drawRoots(renderer, roots[activeExpr], width, height, xmin, xmax, ymin, ymax);
+                    drawRoots(renderer, font, roots[activeExpr], width, height, xmin, xmax, ymin, ymax);
                 }
                 if (showExtrema)
                 {
-                    drawExtrema(renderer, expressions[activeExpr], extrema[activeExpr], width, height, xmin, xmax, ymin, ymax);
+                    drawExtrema(renderer, font, expressions[activeExpr], extrema[activeExpr], width, height, xmin, xmax, ymin, ymax);
                 }
             }
 

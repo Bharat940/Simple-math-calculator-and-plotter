@@ -1,23 +1,40 @@
 #include "renderer.h"
 #include "math/constants.h"
+#include "math/solver.h"
 #include <string>
 #include <cmath>
 #include <SDL_ttf.h>
 
+
 static SDL_Color PALETTE[] = {
-	{0, 255, 0, 255},
-	{255, 0, 0, 255},
-	{0, 0, 255, 255},
-	{255, 165, 0, 255},
-	{255, 0, 255, 255}};
+	{97, 175, 239, 255},  // Soft Blue
+	{224, 108, 117, 255}, // Muted Red
+	{152, 195, 121, 255}, // Soft Green
+	{229, 192, 123, 255}, // Warm Yellow
+	{198, 120, 221, 255}, // Soft Purple
+	{86, 182, 194, 255},  // Teal
+	{255, 150, 75, 255}	  // Warm Orange
+};
 
 constexpr size_t PALETTE_SIZE = sizeof(PALETTE) / sizeof(PALETTE[0]);
 
 static ScaleMode gScaleMode = ScaleMode::Auto;
+static double gDiscontinuityThreshold = EPS_DISCONTINUITY;
 
 void setScaleMode(ScaleMode mode)
 {
 	gScaleMode = mode;
+}
+
+void setDiscontinuityThreshold(double threshold)
+{
+	if (threshold > 0)
+		gDiscontinuityThreshold = threshold;
+}
+
+double getDiscontinuityThreshold()
+{
+	return gDiscontinuityThreshold;
 }
 
 static void drawAdaptiveSegment(
@@ -149,7 +166,7 @@ void drawFunction(
 		{
 			double slope = std::abs(y2 - y1) / step;
 
-			if (slope > EPS_DISCONTINUITY)
+			if (slope > gDiscontinuityThreshold)
 			{
 				x1 = x2;
 				y1 = y2;
@@ -200,8 +217,18 @@ void drawLine(
 	SDL_RenderDrawLine(renderer, px1, py1, px2, py2);
 }
 
+static std::string formatCoord(double v)
+{
+	char buf[32];
+	if (std::abs(v) < 1e-4)
+		return "0";
+	std::snprintf(buf, sizeof(buf), "%.3g", v);
+	return std::string(buf);
+}
+
 void drawRoots(
 	SDL_Renderer *renderer,
+	TTF_Font *font,
 	const std::vector<double> &roots,
 	int width,
 	int height,
@@ -210,7 +237,7 @@ void drawRoots(
 	double ymin,
 	double ymax)
 {
-	SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);
+	SDL_SetRenderDrawColor(renderer, 224, 108, 117, 255);
 
 	for (double r : roots)
 	{
@@ -220,11 +247,29 @@ void drawRoots(
 		// small cross
 		SDL_RenderDrawLine(renderer, px - 5, py, px + 5, py);
 		SDL_RenderDrawLine(renderer, px, py - 5, px, py + 5);
+
+		if (font)
+		{
+			std::string label = "x=" + formatCoord(r);
+			SDL_Surface *surface = TTF_RenderText_Solid(font, label.c_str(), {224, 108, 117, 255});
+			if (surface)
+			{
+				SDL_Texture *texture = SDL_CreateTextureFromSurface(renderer, surface);
+				if (texture)
+				{
+					SDL_Rect dst{px - surface->w / 2, py + 8, surface->w, surface->h};
+					SDL_RenderCopy(renderer, texture, nullptr, &dst);
+					SDL_DestroyTexture(texture);
+				}
+				SDL_FreeSurface(surface);
+			}
+		}
 	}
 }
 
 void drawExtrema(
 	SDL_Renderer *renderer,
+	TTF_Font *font,
 	const Expression &expr,
 	const std::vector<double> &extrema,
 	int width,
@@ -234,22 +279,43 @@ void drawExtrema(
 	double ymin,
 	double ymax)
 {
-	SDL_SetRenderDrawColor(renderer, 255, 165, 0, 255);
+	(void)extrema;
+	auto detailed = findExtremaDetailed(expr, xmin, xmax);
 
-	for (double x : extrema)
+	for (const auto &ex : detailed)
 	{
-		double y = expr.eval(x);
-
-		if (!std::isfinite(y))
-		{
+		if (!std::isfinite(ex.y))
 			continue;
-		}
 
-		int px = mapX(x, width, xmin, xmax);
-		int py = mapY(y, height, ymin, ymax);
+		int px = mapX(ex.x, width, xmin, xmax);
+		int py = mapY(ex.y, height, ymin, ymax);
 
+		SDL_Color col{229, 192, 123, 255};
+		if (ex.kind == ExtremaKind::LocalMax)
+			col = {255, 150, 75, 255};
+		else if (ex.kind == ExtremaKind::Saddle)
+			col = {180, 180, 180, 255};
+
+		SDL_SetRenderDrawColor(renderer, col.r, col.g, col.b, col.a);
 		SDL_Rect r{px - 4, py - 4, 8, 8};
 		SDL_RenderFillRect(renderer, &r);
+
+		if (font)
+		{
+			std::string label = "(" + formatCoord(ex.x) + ", " + formatCoord(ex.y) + ")";
+			SDL_Surface *surface = TTF_RenderText_Solid(font, label.c_str(), col);
+			if (surface)
+			{
+				SDL_Texture *texture = SDL_CreateTextureFromSurface(renderer, surface);
+				if (texture)
+				{
+					SDL_Rect dst{px - surface->w / 2, py - 18, surface->w, surface->h};
+					SDL_RenderCopy(renderer, texture, nullptr, &dst);
+					SDL_DestroyTexture(texture);
+				}
+				SDL_FreeSurface(surface);
+			}
+		}
 	}
 }
 
@@ -306,7 +372,8 @@ void drawGrid(
 	double ymin,
 	double ymax)
 {
-	SDL_SetRenderDrawColor(renderer, 50, 50, 50, 255);
+	SDL_SetRenderDrawColor(renderer, 38, 42, 54, 255);
+
 
 	double xRange = xmax - xmin;
 	double yRange = ymax - ymin;

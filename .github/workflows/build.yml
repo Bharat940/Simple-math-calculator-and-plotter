@@ -1,12 +1,12 @@
-name: Build and Test
+name: Build, Test & Release
 
 on:
   push:
-    branches: [ main, master ]
+    branches: [ main, master, v2-engine-rewrite ]
+    tags: [ 'v*' ]
   pull_request:
     branches: [ main, master ]
 
-# Prevent multiple builds from running at the same time on the same branch
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
@@ -31,16 +31,28 @@ jobs:
       - name: Build
         run: cmake --build build --config Release
 
-      - name: Run tests
+      - name: Run unit tests (132 tests)
         run: ./build/tests
+
+      - name: Run benchmarks
+        run: ./build/benchmarks
+
+      - name: Prepare artifact
+        run: cp build/mathstudio mathstudio-linux
 
       - name: Upload Linux Binaries
         uses: actions/upload-artifact@v4
         with:
-          name: plotter-linux-x64
-          path: |
-            build/plotter
-            build/tests
+          name: mathstudio-linux-x64
+          path: mathstudio-linux
+
+      - name: Release Linux Binary
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v1
+        with:
+          files: mathstudio-linux
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   build-macos:
     name: macOS (Clang)
@@ -61,16 +73,28 @@ jobs:
       - name: Build
         run: cmake --build build --config Release
 
-      - name: Run tests
+      - name: Run unit tests (132 tests)
         run: ./build/tests
+
+      - name: Run benchmarks
+        run: ./build/benchmarks
+
+      - name: Prepare artifact
+        run: cp build/mathstudio mathstudio-macos
 
       - name: Upload macOS Binaries
         uses: actions/upload-artifact@v4
         with:
-          name: plotter-macos-arm64
-          path: |
-            build/plotter
-            build/tests
+          name: mathstudio-macos-arm64
+          path: mathstudio-macos
+
+      - name: Release macOS Binary
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v1
+        with:
+          files: mathstudio-macos
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   build-windows:
     name: Windows (MSVC)
@@ -91,13 +115,25 @@ jobs:
       - name: Build
         run: cmake --build build --config Release
 
-      - name: Run tests
+      - name: Run unit tests (132 tests)
         run: .\build\Release\tests.exe
+
+      - name: Run benchmarks
+        run: .\build\Release\benchmarks.exe
+
+      - name: Prepare artifact
+        run: Copy-Item build\Release\mathstudio.exe mathstudio-windows.exe
 
       - name: Upload Windows Binaries
         uses: actions/upload-artifact@v4
         with:
-          name: plotter-windows-x64
-          path: |
-            build/Release/plotter.exe
-            build/Release/tests.exe
+          name: mathstudio-windows-x64
+          path: mathstudio-windows.exe
+
+      - name: Release Windows Binary
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v1
+        with:
+          files: mathstudio-windows.exe
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

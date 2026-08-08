@@ -4,6 +4,7 @@
 #include <cctype>    // std::isdigit, std::isalpha, std::isspace
 #include <stdexcept> // std::runtime_error
 #include <string>
+#include <unordered_set>
 #include <vector>
 
 static bool needsImplicitMul(TokenType left, TokenType right)
@@ -66,6 +67,24 @@ std::vector<Token> tokenize(const std::string &expr)
                 ++i;
             }
 
+            // Scientific notation: 1e5, 2.3e-10, 1E3
+            if (i < expr.length() && (expr[i] == 'e' || expr[i] == 'E'))
+            {
+                // Peek ahead: must be followed by digit or sign+digit
+                size_t peek = i + 1;
+                if (peek < expr.length() && (expr[peek] == '+' || expr[peek] == '-'))
+                    ++peek;
+                if (peek < expr.length() && std::isdigit(expr[peek]))
+                {
+                    number += expr[i++]; // 'e' or 'E'
+                    if (expr[i] == '+' || expr[i] == '-')
+                        number += expr[i++];
+                    while (i < expr.length() && std::isdigit(expr[i]))
+                        number += expr[i++];
+                }
+                // else: 'e' is not scientific — leave it for the alpha lexer (e.g. "e" constant)
+            }
+
             Token newTok{TokenType::Number, number};
 
             if (!tokens.empty() &&
@@ -97,7 +116,10 @@ std::vector<Token> tokenize(const std::string &expr)
             const auto &constants = getConstantRegistry();
             Token newTok;
 
-            if (name == "x")
+            // Recognized variable names: x (standard), t (time/signal), n (discrete index)
+            static const std::unordered_set<std::string> VARIABLES = {"x", "t", "n"};
+
+            if (VARIABLES.count(name))
             {
                 newTok = {TokenType::Variable, name};
             }

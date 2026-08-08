@@ -1,10 +1,12 @@
 cmake_minimum_required(VERSION 3.10)
-project(FunctionPlotter)
+project(MathStudio)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-# --- Math sources (shared between plotter and tests) ---
+
+# --- Math sources (shared between mathstudio, tests, and benchmarks) ---
 set(MATH_SOURCES
     src/math/tokenizer.cpp
     src/math/parser.cpp
@@ -41,54 +43,62 @@ if(BUILD_GUI)
     endif()
 
     if(SDL2_FOUND OR TARGET SDL2::SDL2 OR SDL2_INCLUDE_DIRS)
-        add_executable(plotter
+
+        add_executable(mathstudio
             src/main.cpp
             src/renderer.cpp
             ${MATH_SOURCES}
         )
 
+
         # Linking SDL2
         if(TARGET SDL2::SDL2)
-            target_link_libraries(plotter PRIVATE SDL2::SDL2main SDL2::SDL2)
+            target_link_libraries(mathstudio PRIVATE SDL2::SDL2main SDL2::SDL2)
         elseif(SDL2_LIBRARIES)
-            target_link_libraries(plotter PRIVATE ${SDL2_LIBRARIES})
-            target_include_directories(plotter PRIVATE ${SDL2_INCLUDE_DIRS})
+            target_link_libraries(mathstudio PRIVATE ${SDL2_LIBRARIES})
+            target_include_directories(mathstudio PRIVATE ${SDL2_INCLUDE_DIRS})
         endif()
 
         # Linking SDL2_ttf
         if(TARGET SDL2_ttf::SDL2_ttf)
-            target_link_libraries(plotter PRIVATE SDL2_ttf::SDL2_ttf)
+            target_link_libraries(mathstudio PRIVATE SDL2_ttf::SDL2_ttf)
         elseif(SDL2_TTF_LIBRARIES)
-            target_link_libraries(plotter PRIVATE ${SDL2_TTF_LIBRARIES})
-            target_include_directories(plotter PRIVATE ${SDL2_TTF_INCLUDE_DIRS})
+            target_link_libraries(mathstudio PRIVATE ${SDL2_TTF_LIBRARIES})
+            target_include_directories(mathstudio PRIVATE ${SDL2_TTF_INCLUDE_DIRS})
         elseif(SDL2_ttf_INCLUDE_DIRS)
-            target_include_directories(plotter PRIVATE ${SDL2_ttf_INCLUDE_DIRS})
+            target_include_directories(mathstudio PRIVATE ${SDL2_ttf_INCLUDE_DIRS})
         endif()
 
         # Add SDL2 subdirectories to include path to support <SDL.h> style
         if(SDL2_INCLUDE_DIRS)
-            target_include_directories(plotter PRIVATE ${SDL2_INCLUDE_DIRS})
+            target_include_directories(mathstudio PRIVATE ${SDL2_INCLUDE_DIRS})
         endif()
         if(SDL2_TTF_INCLUDE_DIRS)
-            target_include_directories(plotter PRIVATE ${SDL2_TTF_INCLUDE_DIRS})
+            target_include_directories(mathstudio PRIVATE ${SDL2_TTF_INCLUDE_DIRS})
         endif()
         if(SDL2_ttf_INCLUDE_DIRS)
-            target_include_directories(plotter PRIVATE ${SDL2_ttf_INCLUDE_DIRS})
+            target_include_directories(mathstudio PRIVATE ${SDL2_ttf_INCLUDE_DIRS})
+        endif()
+
+        if(WIN32)
+            target_link_libraries(mathstudio PRIVATE dwmapi)
         endif()
 
         if(MSVC)
-            target_compile_options(plotter PRIVATE /W4)
+            target_compile_options(mathstudio PRIVATE /W4)
         else()
-            target_compile_options(plotter PRIVATE -Wall -Wextra -Wpedantic)
+            target_compile_options(mathstudio PRIVATE -Wall -Wextra -Wpedantic)
         endif()
 
-        message(STATUS "SDL2 found -- building plotter GUI")
+
     else()
-        message(STATUS "SDL2 not found -- skipping plotter GUI (tests will still build)")
+        message(FATAL_ERROR "SDL2 and SDL2_ttf development libraries are required to build MathStudio GUI")
     endif()
 endif()
 
-# --- Unit tests (no SDL2 dependency -- always builds) ---
+
+
+# --- Unit tests ---
 add_executable(tests tests/test_math.cpp ${MATH_SOURCES})
 
 if(MSVC)
@@ -99,3 +109,13 @@ endif()
 
 enable_testing()
 add_test(NAME MathTests COMMAND tests)
+
+# --- Benchmarks ---
+add_executable(benchmarks benchmarks/bench_v1.cpp ${MATH_SOURCES})
+
+if(MSVC)
+    target_compile_options(benchmarks PRIVATE /W4)
+else()
+    target_compile_options(benchmarks PRIVATE -Wall -Wextra -Wpedantic)
+endif()
+
