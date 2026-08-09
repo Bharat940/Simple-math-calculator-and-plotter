@@ -4,6 +4,29 @@ Format based on [Keep a Changelog](https://keepachangelog.com).
 
 ## [Unreleased]
 
+## [v0.2.0] — AST Compiler Architecture Release - 2026-08-09
+
+### Added
+- **Compiler Substructure (`src/compiler/`)**: Decoupled compiler frontend (`ast`, `parser`, `visitors`, `passes`, `diagnostics`) from domain math engine.
+- **Pratt Parsing Engine**: Implemented precedence and operator associativity via binding-power operator tables in `PrattParser`.
+- **C++17 `MathValue` Variant**: Powered by `std::variant<double, std::complex<double>, Matrix, Vector, bool>` for type-safe compile-time operations.
+- **Compiler Pass Pipeline**:
+  - `ConstantFoldVisitor`: Parse-time evaluation of constant expressions (e.g. `2*pi → 6.283185`).
+  - `SimplifyVisitor`: Parse-time algebraic identity reduction (`x+0 → x`, `x*1 → x`, `x*0 → 0`, `pow(x,1) → x`, `sin(0) → 0`, `cos(0) → 1`).
+- **O(1) Direct Variable Slots**: Accelerated `VariableStore` with direct slots (`xVal`, `tVal`, `nVal`, `thetaVal`, `zVal`, `ansVal`) bypassing string hash map lookups.
+- **Compact Enum Opcodes**: Introduced `BinaryOpType` and `UnaryOpType` enums, removing 32-byte `std::string op` heap overhead per node.
+- **Signal Variable Binding**: Automatic binding of `t`, `n`, `theta`, and `z` to `x` in 2D plot canvas evaluations (`sin(2*pi*t)`).
+- **Diagnostics Reporter**: Position-aware error reporting providing caret indicators and error messages.
+- **Legacy Deprecation**: Deprecated RPN shunting yard into `legacy/shunting_yard.h/cpp` for historical benchmarking.
+
+### Performance
+- **Pure Release (`/O2`) Performance**:
+  - **Parsing**: 0.806 ms / 1,000 expressions (comparable / slightly faster than v0.1.0)
+  - **Evaluation**: 193.91 ms / 100,000 points (~1.93 μs / point)
+  - **Memory Footprint**: 4.0 MB Peak RAM
+
+---
+
 ## [v0.1.0] — Foundation Release - 2026-08-08
 
 ### Added

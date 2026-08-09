@@ -35,11 +35,15 @@ jobs:
       - name: Build
         run: cmake --build build --config Release
 
-      - name: Run unit tests (132 tests)
-        run: ./build/tests
+      - name: Run unit tests (132 tests + 9 AST tests)
+        run: |
+          ./build/tests
+          ./build/test_ast
 
       - name: Run benchmarks
-        run: ./build/benchmarks
+        run: |
+          ./build/benchmarks
+          ./build/bench_v0.2.0
 
       - name: Prepare artifact
         run: cp build/mathstudio mathstudio-linux
@@ -78,11 +82,15 @@ jobs:
       - name: Build
         run: cmake --build build --config Release
 
-      - name: Run unit tests (132 tests)
-        run: ./build/tests
+      - name: Run unit tests (132 tests + 9 AST tests)
+        run: |
+          ./build/tests
+          ./build/test_ast
 
       - name: Run benchmarks
-        run: ./build/benchmarks
+        run: |
+          ./build/benchmarks
+          ./build/bench_v0.2.0
 
       - name: Prepare artifact
         run: cp build/mathstudio mathstudio-macos
@@ -121,11 +129,15 @@ jobs:
       - name: Build
         run: cmake --build build --config Release
 
-      - name: Run unit tests (132 tests)
-        run: .\build\Release\tests.exe
+      - name: Run unit tests (132 tests + 9 AST tests)
+        run: |
+          .\build\Release\tests.exe
+          .\build\Release\test_ast.exe
 
       - name: Run benchmarks
-        run: .\build\Release\benchmarks.exe
+        run: |
+          .\build\Release\benchmarks.exe
+          .\build\Release\bench_v0.2.0.exe
 
       - name: Prepare artifact
         run: Copy-Item build\Release\mathstudio.exe mathstudio-windows.exe

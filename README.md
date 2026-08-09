@@ -2,7 +2,7 @@
   <h1 align="center">MathStudio</h1>
   <p align="center">
     A real-time mathematical function plotter with an interactive GUI and a powerful CLI.<br>
-    Built from scratch in C++17 with SDL2. No external math libraries.
+    Built from scratch in C++17 with SDL2 and an extensible AST compiler engine. No external math libraries.
   </p>
 </p>
 
@@ -14,8 +14,8 @@
   <img src="https://img.shields.io/badge/Platform-Linux%20%7C%20macOS%20%7C%20Windows-lightgrey?style=flat-square" alt="Platform">
   <br>
   <img src="https://github.com/Bharat940/Simple-math-calculator-and-plotter/actions/workflows/build.yml/badge.svg" alt="Build and Test">
-  <a href="https://github.com/Bharat940/Simple-math-calculator-and-plotter/releases/tag/v0.1.0">
-    <img src="https://img.shields.io/badge/Release-v0.1.0-blue?style=flat-square&logo=github" alt="Latest Release">
+  <a href="https://github.com/Bharat940/Simple-math-calculator-and-plotter/releases/tag/v0.2.0">
+    <img src="https://img.shields.io/badge/Release-v0.2.0-blue?style=flat-square&logo=github" alt="Latest Release">
   </a>
 
   <img src="https://img.shields.io/badge/Tests-132%20Passing-brightgreen?style=flat-square" alt="132 Passing Tests">
@@ -24,6 +24,16 @@
 ---
 
 ## Features
+
+### Compiler-Driven AST Engine (v0.2.0 Architecture)
+- **Pratt Parser Frontend**: Binding-power operator table parser (`infixBindingPower`, `prefixBindingPower`). Handles operator precedence and associativity with precision.
+- **Compiler Pass Manager Pipeline**:
+  - `ConstantFoldVisitor`: Parse-time folding of constant expressions (e.g. `2*pi → 6.283185`).
+  - `SimplifyVisitor`: Parse-time algebraic identity reduction (`x+0 → x`, `x*1 → x`, `x*0 → 0`, `pow(x,1) → x`, `sin(0) → 0`, `cos(0) → 1`, `-(-x) → x`).
+- **C++17 `MathValue` Variant Substrate**: Powered by `std::variant<double, std::complex<double>, Matrix, Vector, bool>` for type-safe compile-time operations and complex number support.
+- **$O(1)$ Direct Variable Slots**: `VariableStore` maintains direct memory slots (`xVal`, `tVal`, `nVal`, `thetaVal`, `zVal`, `ansVal`) bypassing string hash map lookups.
+- **Compact Enum Opcodes**: Nodes use 1-byte `BinaryOpType` and `UnaryOpType` enums, eliminating 32-byte string overhead per operator node.
+- **AST Expression Caching**: `ExpressionCache` caches AST trees by string key, eliminating re-parsing overhead across render frames (`0.00 ms` re-parse cost).
 
 ### Interactive GUI
 - **Real-time function plotting** with adaptive curve rendering for smooth visuals
@@ -39,7 +49,7 @@
 ### Command-Line Interface & Signal Math
 - **Evaluate** expressions: `mathstudio -e "sin(tau/4)"`
 - **Scientific Notation**: parsing for tiny or huge numbers directly (`1e-5`, `2.3e10`, `3E2`)
-- **Signal Variables**: native support for `x` (standard), `t` (time domain for DSP/signals, e.g. `sin(2*pi*t)`), and `n` (discrete index)
+- **Signal Variables**: native support for `x` (standard), `t` (time domain for DSP/signals, e.g. `sin(2*pi*t)`), `n` (discrete sequence index), `theta`, and `z`
 - **Solve** equations (find roots): `mathstudio -s "x^2 - 4"`
 - **Find intersections** of two functions: `mathstudio -i "x^2" "2*x + 1"`
 - **Verbose mode** with Newton-Raphson convergence details
@@ -54,15 +64,15 @@
 | **Hyperbolic** | `sinh`, `cosh`, `tanh` |
 | **Exponential** | `exp`, `log` (natural), `log10`, `log(x, base)` |
 | **Algebraic** | `sqrt`, `abs`, `floor`, `ceil`, `pow`, `max`, `min` |
-| **Variables** | `x` (standard), `t` (time domain), `n` (discrete index) |
+| **Variables** | `x` (standard), `t` (time domain), `n` (discrete index), `theta`, `z` |
 | **Constants** | `pi`, `e` (Euler's number), `phi` (Golden ratio), `tau` (`= 2*pi`) |
 | **Operators** | `+`, `-`, `*`, `/`, `^` (power) |
 
-**Smart parsing features:**
-- Implicit multiplication: `2x`, `3sin(x)`, `(x+1)(x-1)`
+**Smart compiler features:**
+- Implicit multiplication: `2x`, `3sin(x)`, `(x+1)(x-1)`, `2pi`, `2(3+4)`
 - Scientific notation: `1.5e-3`, `2.3e10`, `3E2`
-- Unary minus: `-x^2`, `sin(-x)`
-- Nested functions: `sin(cos(x^2))`
+- Unary minus & double negation: `-x^2`, `sin(-x)`, `--5`
+- Nested function calls: `sin(cos(x^2))`, `max(max(1,2),3)`
 
 ---
 
@@ -84,7 +94,7 @@ sudo apt-get install cmake g++ libsdl2-dev libsdl2-ttf-dev
 git clone https://github.com/Bharat940/Simple-math-calculator-and-plotter.git
 cd Simple-math-calculator-and-plotter
 mkdir build && cd build
-cmake ..
+cmake -DCMAKE_BUILD_TYPE=Release ..
 make
 
 ./mathstudio "sin(x)"
@@ -100,7 +110,7 @@ brew install cmake sdl2 sdl2_ttf
 git clone https://github.com/Bharat940/Simple-math-calculator-and-plotter.git
 cd Simple-math-calculator-and-plotter
 mkdir build && cd build
-cmake ..
+cmake -DCMAKE_BUILD_TYPE=Release ..
 make
 
 ./mathstudio "sin(x)"
@@ -115,8 +125,8 @@ vcpkg install sdl2 sdl2-ttf --triplet x64-windows
 
 # 2. Load Visual Studio environment & build with CMake
 & "C:\Program Files\Microsoft Visual Studio\18\Community\Common7\Tools\Launch-VsDevShell.ps1" -Arch amd64
-cmake -B build -DCMAKE_TOOLCHAIN_FILE="C:/Dev/vcpkg/scripts/buildsystems/vcpkg.cmake"
-cmake --build build
+cmake -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE="C:/Dev/vcpkg/scripts/buildsystems/vcpkg.cmake"
+cmake --build build --config Release
 
 # 3. Launch Interactive GUI Window
 .\build\mathstudio.exe "sin(x), cos(x)"
@@ -147,7 +157,7 @@ cmake --build build
 ./build/mathstudio "sin(x), cos(x), tan(x)"
 
 # Time-domain signal
-./build/mathstudio "sin(tau*t)"
+./build/mathstudio "sin(2*pi*t)"
 ```
 
 ### CLI Mode
@@ -236,19 +246,23 @@ cmake --build build
 
 ## Architecture
 
-The project follows a modular pipeline design:
+The project follows a decoupled, compiler-driven AST architecture:
 
 ```mermaid
 graph TD
     %% Node Definitions
     User([fa:fa-user User Input])
     Main[fa:fa-cogs Main<br/><i>CLI/GUI Orchestrator</i>]
-    Expr[fa:fa-code Expression<br/><i>High-level Math Interface</i>]
-    Token[fa:fa-list Tokenizer<br/><i>Lexical Analysis</i>]
-    Parse[fa:fa-project-diagram Parser<br/><i>Shunting-Yard</i>]
-    Eval[fa:fa-microchip Evaluator<br/><i>Postfix Stack</i>]
-    Funcs[fa:fa-function Functions<br/><i>Math Functions Registry</i>]
-    Consts[fa:fa-pi Constants<br/><i>Named Constants</i>]
+    Expr[fa:fa-code Expression<br/><i>Math Engine Wrapper</i>]
+    Cache{fa:fa-database ExpressionCache<br/><i>AST String Cache</i>}
+    Lexer[fa:fa-list Tokenizer<br/><i>Lexical Analysis</i>]
+    Pratt[fa:fa-project-diagram Pratt Parser<br/><i>AST Construction</i>]
+    PassMgr[fa:fa-magic PassManager<br/><i>Compiler Passes</i>]
+    Fold[ConstantFoldVisitor<br/><i>2*pi → 6.283185</i>]
+    Simp[SimplifyVisitor<br/><i>x*1 → x, sin(0) → 0</i>]
+    Eval[fa:fa-microchip EvalVisitor<br/><i>O(1) Slots + Enum Opcodes</i>]
+    Funcs[fa:fa-function FunctionRegistry<br/><i>19 Functions</i>]
+    Vars[fa:fa-vial VariableStore<br/><i>O(1) Direct Slots</i>]
     
     Solve[fa:fa-search-plus Solver<br/><i>Roots/Intersections/Extrema</i>]
     Num[fa:fa-calculator Numerical<br/><i>Derivatives/Tangents</i>]
@@ -257,20 +271,21 @@ graph TD
     %% Core Pipeline
     User -- "f(x) string" --> Main
     Main --> Expr
-    Expr --> Token
-    Expr --> Parse
-    Expr --> Eval
+    Expr --> Cache
+    Cache -- Miss --> Lexer --> Pratt --> PassMgr
+    PassMgr --> Fold & Simp --> Eval
+    Cache -- Hit --> Eval
     
     %% Analysis Modules
     Expr -- "f(x)" --> Solve
     Expr -- "f(x)" --> Num
     Expr -- "f(x)" --> Render
     
-    subgraph CoreMath [Core Math Pipeline]
+    subgraph CompilerPipeline [Compiler AST Frontend (src/compiler/)]
         direction LR
-        Token --> Parse --> Eval
+        Lexer --> Pratt --> PassMgr
         Eval -.-> Funcs
-        Eval -.-> Consts
+        Eval -.-> Vars
     end
 
     subgraph Analysis [Mathematical Analysis]
@@ -289,7 +304,7 @@ graph TD
 
     %% Styling
     style User fill:#f9f,stroke:#333,stroke-width:2px
-    style CoreMath fill:#e1f5fe,stroke:#01579b,stroke-dasharray: 5 5
+    style CompilerPipeline fill:#e1f5fe,stroke:#01579b,stroke-dasharray: 5 5
     style Analysis fill:#fff3e0,stroke:#ef6c00,stroke-dasharray: 5 5
     style Output fill:#f1f8e9,stroke:#33691e
     style GUI fill:#c8e6c9,stroke:#2e7d32,stroke-width:2px
@@ -301,23 +316,17 @@ graph TD
 | Module | File(s) | Description |
 |--------|---------|-------------|
 | **Main** | `main.cpp` | Entry point: CLI argument parsing, mode dispatch (-e/-s/-i/GUI), SDL2 GUI event loop |
-| **Expression** | `expression.h/cpp` | High-level math expression interface: tokenizes, parses, validates, and evaluates expressions |
-| **Tokenizer** | `tokenizer.h/cpp` | Lexical analysis: converts expression strings to tokens with implicit multiplication and scientific notation support |
-| **Parser** | `parser.h/cpp` | Shunting-Yard algorithm: converts infix token stream to postfix notation |
-| **Evaluator** | `evaluator.h/cpp` | Stack-based postfix evaluation engine with function, constant, and variable lookups |
-| **Functions** | `functions.h/cpp` | Registry of 18 built-in math functions (sin, cos, log, etc.) with domain validation |
-| **Constants** | `constants_registry.h/cpp` | Named constant registry (pi, e, phi, tau) for symbolic math |
+| **Expression** | `expression.h/cpp` | High-level math expression interface: orchestrates tokenizer, Pratt parser, PassManager, and AST cache |
+| **Pratt Parser** | `PrattParser.hpp/cpp` | Binding-power operator table parser: constructs `std::unique_ptr<ASTNode>` trees |
+| **AST Nodes** | `Node.hpp/cpp` | Single-ownership tree nodes (`Number`, `Variable`, `Constant`, `BinaryOp`, `UnaryOp`, `Function`) with compact `BinaryOpType` and `UnaryOpType` enums |
+| **Compiler Passes** | `PassManager.hpp/cpp` | Runs optimization passes: `ConstantFoldVisitor` (`2*pi → 6.283185`) and `SimplifyVisitor` (`x*1 → x`, `sin(0) → 0`) |
+| **Evaluator** | `EvalVisitor.hpp/cpp` | Tree visitor with $O(1)$ variable slot lookup and zero-cost opcode switch-dispatch |
+| **VariableStore** | `VariableStore.hpp/cpp` | Pre-defined system variables (`x`, `t`, `n`, `theta`, `z`, `ans`) with direct memory slots |
+| **FunctionRegistry**| `FunctionRegistry.hpp/cpp` | Categorized registry of 19 built-in math functions with domain error checking |
 | **Solver** | `solver.h/cpp` | Root-finding and detailed extrema classification (minima, maxima, saddle points) |
 | **Numerical** | `numerical.h/cpp` | Numerical differentiation using central differences and tangent line computation |
 | **Renderer** | `renderer.h/cpp` | SDL2 rendering engine: adaptive curve plotting, grid, dark palette, text labels, markers |
-
-### Key Algorithms
-
-- **Adaptive Curve Rendering**: Recursive subdivision based on screen-space error. Produces smooth curves with fewer samples where the function is linear, and more detail at curves and inflection points.
-- **Discontinuity Detection**: Slope-threshold check to avoid connecting asymptotes (e.g., `tan(x)` near pi/2).
-- **Hybrid Root Finding**: Bisection method for robustness, followed by Newton-Raphson for precision refinement.
-- **Extrema Classification**: Second numerical derivative check to categorize points into local minima, local maxima, and saddle points.
-- **Nice Number Grid Scaling**: Grid lines snap to "nice" intervals (1, 2, 5 x 10^n) for readable axis labels.
+| **Legacy RPN** | `legacy/shunting_yard.h/cpp` | Historical shunting-yard RPN parser preserved for benchmark comparisons (marked `[[deprecated]]`) |
 
 ---
 
@@ -328,26 +337,46 @@ Simple-math-calculator-and-plotter/
 |-- CMakeLists.txt              # Cross-platform build configuration
 |-- LICENSE                     # MIT License
 |-- README.md
-|-- CHANGELOG.md                # Release tracks
-|-- ROADMAP.md                  # Phase roadmap
+|-- CHANGELOG.md                # Release tracks & v0.2.0 changelog
+|-- ROADMAP.md                  # Master architecture roadmap
 |-- CONTRIBUTING.md             # Guidelines for contributors
 |-- .gitignore
 |-- .github/
 |   +-- workflows/
 |       +-- build.yml           # CI/CD -- build and test on Linux, macOS, Windows
 |-- benchmarks/
-|   +-- bench_v1.cpp            # Performance benchmark suite
+|   |-- bench_v1.cpp            # Baseline RPN benchmark suite
+|   |-- bench_v0.2.0.cpp        # v0.2.0 AST benchmark suite
+|   +-- benchmark_v0.2.0.md     # Pure Release (/O2) benchmark log
 |-- tests/
-|   +-- test_math.cpp           # 132 Unit tests for the math pipeline
+|   |-- test_math.cpp           # 132 Unit tests for the math pipeline
+|   +-- test_ast.cpp            # 9 AST compiler pipeline tests
+|-- legacy/
+|   +-- shunting_yard.h/cpp     # Historical RPN shunting-yard parser
 +-- src/
     |-- main.cpp                # Entry point, CLI parsing, GUI event loop
     |-- renderer.h/cpp          # SDL2 rendering engine
+    |-- core/
+    |   |-- MathValue.hpp/cpp        # C++17 std::variant<double, complex, Matrix, Vector, bool>
+    |   |-- VariableStore.hpp/cpp    # O(1) direct variable slots
+    |   |-- FunctionRegistry.hpp/cpp # 19 built-in functions
+    |   |-- EvaluationContext.hpp    # Parameter object for visitors
+    |   +-- ExpressionCache.hpp/cpp  # AST string caching subsystem
+    |-- compiler/
+    |   |-- ast/Node.hpp/cpp         # AST tree nodes & OpType enums
+    |   |-- parser/PrattParser.hpp/cpp# Pratt binding-power parser
+    |   |-- visitors/
+    |   |   |-- Visitor.hpp          # Base visitor interface
+    |   |   |-- EvalVisitor.hpp/cpp  # AST tree evaluator
+    |   |   +-- PrintVisitor.hpp/cpp # AST pretty printer
+    |   |-- passes/
+    |   |   |-- PassManager.hpp/cpp  # Pass orchestration
+    |   |   |-- ConstantFoldVisitor.hpp/cpp # Constant folding
+    |   |   +-- SimplifyVisitor.hpp/cpp     # Algebraic identity reduction
+    |   +-- diagnostics/Diagnostics.hpp/cpp # Position-aware diagnostics reporter
     +-- math/
+        |-- expression.h/cpp            # Expression wrapper & pass runner
         |-- tokenizer.h/cpp             # Lexical analysis
-        |-- parser.h/cpp                # Shunting-Yard parser
-        |-- evaluator.h/cpp             # Postfix evaluator
-        |-- expression.h/cpp            # Expression wrapper
-        |-- functions.h/cpp             # Function registry
         |-- solver.h/cpp                # Root, intersection & extrema finding
         |-- numerical.h/cpp             # Derivatives and tangents
         |-- constants.h                 # Numeric epsilon constants
@@ -368,7 +397,7 @@ Simple-math-calculator-and-plotter/
 ./mathstudio "sin(x), cos(x)"
 
 # Time-domain signal processing
-./mathstudio "sin(tau*t)"
+./mathstudio "sin(2*pi*t)"
 
 # Damped oscillation
 ./mathstudio "exp(-x^2) * sin(10*x)"
@@ -387,21 +416,25 @@ Simple-math-calculator-and-plotter/
 
 ## Testing & Performance Benchmarks
 
-The project includes a self-contained unit test suite (132 tests) and a performance benchmark suite.
+The project includes a self-contained unit test suite (132 tests), AST compiler test suite (9 steps), and a performance benchmark suite.
 
 ```bash
-# Build and run tests
+# Build and run tests (Release mode)
 mkdir build && cd build
-cmake ..
-cmake --build .
+cmake -DCMAKE_BUILD_TYPE=Release ..
+cmake --build . --config Release
 
 # Linux / macOS
 ./tests
+./test_ast
 ./benchmarks
+./bench_v0.2.0
 
 # Windows
 .\build\tests.exe
+.\build\test_ast.exe
 .\build\benchmarks.exe
+.\build\bench_v0.2.0.exe
 ```
 
 ### What is Tested (132/132 Tests Passing)
@@ -409,28 +442,30 @@ cmake --build .
 | Suite | Coverage |
 |-------|----------|
 | Tokenizer | Number/variable/operator/function/constant tokens, implicit multiplication, scientific notation, invalid characters |
-| Parser | Postfix conversion, operator precedence, associativity, parentheses, unary minus, mismatched parens |
-| Evaluator | Arithmetic, variable substitution (`x`, `t`, `n`), division by zero, order of operations |
-| Functions | All 18 built-in functions, domain error detection (`asin`, `sqrt`, `log`), binary functions (`pow`, `max`, `min`, `log` with base) |
+| Pratt Parser | AST construction, binding-power precedence, associativity, parentheses, unary minus, double negation |
+| PassManager | `ConstantFoldVisitor` (`2*pi → 6.283185`), `SimplifyVisitor` (`x+0 → x`, `x*1 → x`, `x*0 → 0`, `sin(0) → 0`) |
+| VariableStore | $O(1)$ direct slots for `x`, `t`, `n`, `theta`, `z`, `ans`, variable substitution, undefined variable diagnostics |
+| Functions | All 19 built-in functions, domain error detection (`asin`, `sqrt`, `log`), binary functions (`pow`, `max`, `min`, `log` with base) |
 | Constants | `pi`, `e`, `phi`, `tau` (`= 2*pi`) values and usage in expressions |
 | Expression | Complex expressions, `sin^2+cos^2` identity, nested functions, `evalSafe` |
 | Numerical | Derivatives of `x^2`, `sin(x)`, `x^3` at specific points, tangent line computation |
 | Solver | Root-finding (`x^2-4`, `sin(x)`, `x^3`), detailed results, intersections, extrema classification |
 | Edge Cases | Empty expressions, large exponents, negative exponents, scientific notation (`1e-5`), deep nesting |
 
-### Benchmark Metrics Baseline (v0.1.0 Foundation Release)
+### Benchmark Metrics Baseline (Pure Release `/O2` Optimization)
 
 System: MSVC 19.51 (`Launch-VsDevShell.ps1 -Arch amd64`), Windows x64.
 
-| Benchmark | Iterations | Average Time (ms/run) | Unit Time |
-|-----------|------------|-----------------------|-----------|
-| **Parse 1,000 expressions** | 1,000 expressions | **96.08 ms** | ~96.08 μs / expr |
-| **Evaluate 100,000 points** | 100,000 points | **1,329.58 ms** | ~13.29 μs / point |
-| **Find roots `sin(x)`** | Range `[-50, 50]` | **7.33 ms** | ~0.14 ms / root |
-| **Find extrema `x^3 - 3x`** | Range `[-5, 5]` | **1.68 ms** | ~0.84 ms / extremum |
+| Benchmark | Iterations / Input | v0.1.0 RPN Baseline | v0.2.0 AST Engine | Performance Notes |
+|-----------|--------------------|---------------------|-------------------|-------------------|
+| **Parse 1,000 expressions** | 1,000 expressions | 0.811 ms | **0.806 ms** | Pratt binding-power table |
+| **Expression Cache Reparse** | per render frame | N/A | **0.000 ms** | Zero parse overhead on render loop |
+| **Evaluate 100,000 points** | 100,000 points | 184.95 ms | **193.91 ms** | ~1.93 μs / point |
+| **Find roots `sin(x)`** | Range `[-50, 50]` | 1.403 ms | **1.730 ms** | AST Visitor tree evaluation |
+| **Find extrema `x^3 - 3x`** | Range `[-5, 5]` | 0.368 ms | **0.351 ms** | Classifies minima, maxima, saddle |
+| **Peak Working Set** | Entire Engine | 4.0 MB | **4.0 MB** | Identical memory footprint |
 
-Detailed historical benchmarks are logged in [`benchmarks/benchmark_v0.1.0.md`](benchmarks/benchmark_v0.1.0.md).
-
+Detailed historical benchmarks are logged in [`benchmarks/benchmark_v0.2.0.md`](benchmarks/benchmark_v0.2.0.md).
 
 ---
 
@@ -441,43 +476,45 @@ MathStudio follows a strict **Semantic Versioning** progression model. Full arch
 ```text
 v0.0.1  ✅  Prototype Release — initial RPN evaluator & basic plotter
   ↓
-v0.1.0  ✅  Foundation Release (Current) — bug fixes, refactoring, 132 tests, benchmarks, dark titlebar
+v0.1.0  ✅  Foundation Release — refactoring, 132 tests, benchmark suite, dark titlebar
   ↓
-v0.2.0  📋  Architecture Rewrite — AST + visitors + MathValue + Dear ImGui UI
+v0.2.0  ✅  AST Architecture Rewrite (Complete & Frozen) — Pratt Parser, MathValue variant, ConstantFoldVisitor, SimplifyVisitor, O(1) Slots, Enum Opcodes
   ↓
-v0.3.0  📋  Calculus Engine — symbolic diff, integration, limits, Taylor series
+v0.3.0  📋  Dear ImGui & ImPlot UI Overhaul (Next) — Docked control panels, variable inspectors, live performance visualizers
   ↓
-v0.4.0  📋  Signal Processing — FFT, DFT, IFFT, convolution, filter visualizer
+v0.4.0  📋  Calculus Engine — Symbolic differentiation (DerivativeVisitor), numerical integration, limits, Taylor series
   ↓
-v0.5.0  📋  Linear Algebra — Matrix & vector editor, eigenvalues
+v0.5.0  📋  Linear Algebra Engine — Typed Matrix wrapper (Matrix<T>), determinants, eigenvalues
   ↓
-v0.6.0  📋  Computer Algebra System — Symbolic simplification, factoring
+v0.6.0  📋  Signal Processing (DSP) — DFT → FFT → IFFT → Convolution, window functions, spectrogram
   ↓
-v1.0.0  🎯  Stable Scientific Computing Engine Major Milestone
+v0.7.0  📋  Computer Algebra System (CAS) — Polynomial expansion & factoring
+  ↓
+v0.8.0  📋  Sessions & Serialization — AST JSON serialization, workspace project files, undo/redo manager
+  ↓
+v1.0.0  🎯  ★ Stable Scientific Computing Engine Major Milestone
 ```
 
 ---
 
 ## Technical Highlights
 
-
-- **Zero external math dependencies** -- all parsing, evaluation, and numerical methods implemented from scratch
+- **Zero external math dependencies** -- all parsing, evaluation, compiler passes, and numerical methods implemented from scratch
+- **Extensible AST Compiler Architecture** -- decoupled Pratt parser, visitor pattern, PassManager, and diagnostics
 - **Cross-platform** -- builds and runs on Linux, macOS, and Windows with a single CMakeLists.txt
 - **CI/CD** -- automated build and test on three platforms via GitHub Actions
-- **132 Unit tests passing** -- comprehensive test suite covering all math modules
+- **132 Unit tests + 9 AST tests passing** -- comprehensive test suite covering all compiler and math modules
 - **Extrema Classification** -- classifies local minima, maxima, and saddle points using numerical second derivatives
 - **Canvas Text Labels** -- renders formatted coordinate callouts directly on graph markers
-- **Safe evaluation** — `EvalResult` pattern provides structured error handling without exceptions in hot paths
-- **Domain-aware functions** — `sqrt`, `log`, `asin`, `acos`, and `tan` return clear error messages for out-of-domain inputs
-- **Cross-platform font loading** — automatic fallback chain across Linux, macOS, and Windows font paths
-- **Input validation** — character whitelisting, parenthesis balancing, and nesting depth limits
+- **Safe evaluation** -- `EvalResult` pattern provides structured error handling without exceptions in hot paths
+- **Domain-aware functions** -- `sqrt`, `log`, `asin`, `acos`, and `tan` return clear error messages for out-of-domain inputs
+- **Input validation** -- character whitelisting, parenthesis balancing, and nesting depth limits
 
 ---
 
 ## Download & Releases
 
-The latest compiled binaries for Windows, Linux, and macOS are available in the [Releases](https://github.com/Bharat940/Simple-math-calculator-and-plotter/releases/tag/v0.1.0) section.
-
+The latest compiled binaries for Windows, Linux, and macOS are available in the [Releases](https://github.com/Bharat940/Simple-math-calculator-and-plotter/releases/tag/v0.2.0) section.
 
 ---
 
@@ -485,11 +522,11 @@ The latest compiled binaries for Windows, Linux, and macOS are available in the 
 
 Contributions are welcome! Whether you're fixing a bug, suggesting a feature, or improving documentation, here's how you can help:
 
-1.  **Fork** the repository.
-2.  Create a **feature branch** (`git checkout -b feature/AmazingFeature`).
-3.  **Commit** your changes (`git commit -m 'Add AmazingFeature'`).
-4.  **Push** to the branch (`git push origin feature/AmazingFeature`).
-5.  Open a **Pull Request**.
+1. **Fork** the repository.
+2. Create a **feature branch** (`git checkout -b feature/AmazingFeature`).
+3. **Commit** your changes (`git commit -m 'Add AmazingFeature'`).
+4. **Push** to the branch (`git push origin feature/AmazingFeature`).
+5. Open a **Pull Request**.
 
 ---
 

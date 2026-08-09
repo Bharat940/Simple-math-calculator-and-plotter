@@ -16,7 +16,21 @@ set(MATH_SOURCES
     src/math/constants_registry.cpp
     src/math/expression.cpp
     src/math/numerical.cpp
+    src/core/MathValue.cpp
+    src/core/VariableStore.cpp
+    src/core/FunctionRegistry.cpp
+    src/core/ExpressionCache.cpp
+    src/compiler/ast/Node.cpp
+    src/compiler/diagnostics/Diagnostics.cpp
+    src/compiler/parser/PrattParser.cpp
+    src/compiler/visitors/EvalVisitor.cpp
+    src/compiler/visitors/PrintVisitor.cpp
+    src/compiler/passes/PassManager.cpp
+    src/compiler/passes/ConstantFoldVisitor.cpp
+    src/compiler/passes/SimplifyVisitor.cpp
+    legacy/shunting_yard.cpp
 )
+
 
 # --- GUI plotter (requires SDL2 + SDL2_ttf) ---
 option(BUILD_GUI "Build the GUI plotter (requires SDL2)" ON)
@@ -100,22 +114,31 @@ endif()
 
 # --- Unit tests ---
 add_executable(tests tests/test_math.cpp ${MATH_SOURCES})
+add_executable(test_ast tests/test_ast.cpp ${MATH_SOURCES})
 
 if(MSVC)
     target_compile_options(tests PRIVATE /W4)
+    target_compile_options(test_ast PRIVATE /W4)
 else()
     target_compile_options(tests PRIVATE -Wall -Wextra -Wpedantic)
+    target_compile_options(test_ast PRIVATE -Wall -Wextra -Wpedantic)
 endif()
 
 enable_testing()
 add_test(NAME MathTests COMMAND tests)
+add_test(NAME ASTTests COMMAND test_ast)
+
 
 # --- Benchmarks ---
 add_executable(benchmarks benchmarks/bench_v1.cpp ${MATH_SOURCES})
+add_executable(bench_v0.2.0 benchmarks/bench_v0.2.0.cpp ${MATH_SOURCES})
 
 if(MSVC)
     target_compile_options(benchmarks PRIVATE /W4)
+    target_compile_options(bench_v0.2.0 PRIVATE /W4)
 else()
     target_compile_options(benchmarks PRIVATE -Wall -Wextra -Wpedantic)
+    target_compile_options(bench_v0.2.0 PRIVATE -Wall -Wextra -Wpedantic)
 endif()
+
 
