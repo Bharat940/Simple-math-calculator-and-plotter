@@ -133,6 +133,11 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Pre-cache FreeType from GitHub Mirror (bypasses gitlab.freedesktop.org outage)
+        run: |
+          New-Item -ItemType Directory -Force -Path C:\vcpkg\downloads
+          curl.exe -L "https://github.com/freetype/freetype/archive/refs/tags/VER-2-14-3.tar.gz" -o "C:\vcpkg\downloads\freetype-freetype-VER-2-14-3.tar.gz"
+
       - name: Install dependencies
         run: vcpkg install sdl2 sdl2-ttf --triplet x64-windows-static
 
