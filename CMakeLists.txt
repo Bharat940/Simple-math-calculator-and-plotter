@@ -134,6 +134,8 @@ if(BUILD_GUI)
 
         if(WIN32)
             target_link_libraries(mathstudio PRIVATE dwmapi)
+        elseif(APPLE)
+            target_link_directories(mathstudio PRIVATE /opt/homebrew/lib /usr/local/lib)
         endif()
 
         if(MSVC)

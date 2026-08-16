@@ -42,8 +42,8 @@ jobs:
 
       - name: Run Valgrind dynamic memory leak audit
         run: |
-          valgrind --leak-check=full --show-leak-kinds=all --error-exitcode=1 ./build/tests
-          valgrind --leak-check=full --show-leak-kinds=all --error-exitcode=1 ./build/test_ast
+          valgrind --leak-check=full --show-leak-kinds=definite,indirect --errors-for-leak-kinds=definite,indirect --error-exitcode=1 ./build/tests
+          valgrind --leak-check=full --show-leak-kinds=definite,indirect --errors-for-leak-kinds=definite,indirect --error-exitcode=1 ./build/test_ast
 
       - name: Run benchmarks & CLI leak check
         run: |
@@ -82,12 +82,12 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Install dependencies
-        run: brew install sdl2 sdl2_ttf
+        run: brew install sdl2 sdl2_ttf freetype
 
       - name: Configure
         run: |
           cmake -B build -DCMAKE_BUILD_TYPE=Release \
-          -DCMAKE_PREFIX_PATH="$(brew --prefix sdl2);$(brew --prefix sdl2_ttf)"
+          -DCMAKE_PREFIX_PATH="$(brew --prefix);$(brew --prefix sdl2);$(brew --prefix sdl2_ttf);$(brew --prefix freetype)"
 
       - name: Build
         run: cmake --build build --config Release
@@ -135,8 +135,6 @@ jobs:
 
       - name: Install dependencies
         run: vcpkg install sdl2 sdl2-ttf --triplet x64-windows-static
-        env:
-          VCPKG_BINARY_SOURCES: "clear"
 
       - name: Configure
         run: cmake -B build -DCMAKE_BUILD_TYPE=Release -DVCPKG_TARGET_TRIPLET=x64-windows-static -DCMAKE_TOOLCHAIN_FILE=C:/vcpkg/scripts/buildsystems/vcpkg.cmake
