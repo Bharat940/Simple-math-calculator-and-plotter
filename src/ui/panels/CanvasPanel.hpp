@@ -1,7 +1,7 @@
 #pragma once
 
 #include "ui/panels/IPanel.hpp"
-#include <SDL2/SDL.h>
+#include <SDL.h>
 
 namespace mathstudio::ui
 {

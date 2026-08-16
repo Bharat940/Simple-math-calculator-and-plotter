@@ -30,7 +30,6 @@ namespace mathstudio::ui
         bool hasParameter(const std::string &name) const;
 
     private:
-        char m_searchBuffer[128] = {0};
         std::map<std::string, ParamConfig> m_userParams;
         std::unordered_set<std::string> m_manualParams;
     };
