@@ -8,11 +8,11 @@
 class EvalVisitor : public Visitor
 {
 private:
-    EvaluationContext &context;
+    mathstudio::core::EvaluationContext &context;
     MathValue result;
 
 public:
-    explicit EvalVisitor(EvaluationContext &ctx) : context(ctx) {}
+    explicit EvalVisitor(mathstudio::core::EvaluationContext &ctx) : context(ctx) {}
 
     MathValue getResult() const { return result; }
 

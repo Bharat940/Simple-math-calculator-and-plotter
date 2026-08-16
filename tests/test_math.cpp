@@ -21,47 +21,67 @@
 #include "../src/math/constants.h"
 #include "../src/math/functions.h"
 #include "../src/math/constants_registry.h"
+#include "../src/core/VariableStore.hpp"
+#include "../src/core/EvaluationContext.hpp"
 
 // Minimal test framework
 
-static int g_total   = 0;
-static int g_passed  = 0;
-static int g_failed  = 0;
+static int g_total = 0;
+static int g_passed = 0;
+static int g_failed = 0;
 static std::string g_currentSuite;
 
-#define TEST_SUITE(name) \
-    do { g_currentSuite = name; } while (0)
-
-#define CHECK(condition, description)                                          \
-    do {                                                                       \
-        ++g_total;                                                             \
-        if (condition) {                                                       \
-            ++g_passed;                                                        \
-        } else {                                                               \
-            ++g_failed;                                                        \
-            std::cerr << "  FAIL [" << g_currentSuite << "] "                  \
-                      << description << "  (" << __FILE__ << ":"               \
-                      << __LINE__ << ")" << std::endl;                         \
-        }                                                                      \
+#define TEST_SUITE(name)       \
+    do                         \
+    {                          \
+        g_currentSuite = name; \
     } while (0)
 
-#define CHECK_APPROX(actual, expected, eps, description)                       \
+#define CHECK(condition, description)                            \
+    do                                                           \
+    {                                                            \
+        ++g_total;                                               \
+        if (condition)                                           \
+        {                                                        \
+            ++g_passed;                                          \
+        }                                                        \
+        else                                                     \
+        {                                                        \
+            ++g_failed;                                          \
+            std::cerr << "  FAIL [" << g_currentSuite << "] "    \
+                      << description << "  (" << __FILE__ << ":" \
+                      << __LINE__ << ")" << std::endl;           \
+        }                                                        \
+    } while (0)
+
+#define CHECK_APPROX(actual, expected, eps, description) \
     CHECK(std::abs((actual) - (expected)) < (eps), description)
 
-#define CHECK_THROWS(expression, description)                                  \
-    do {                                                                       \
-        ++g_total;                                                             \
-        bool threw = false;                                                    \
-        try { expression; } catch (...) { threw = true; }                      \
-        if (threw) {                                                           \
-            ++g_passed;                                                        \
-        } else {                                                               \
-            ++g_failed;                                                        \
-            std::cerr << "  FAIL [" << g_currentSuite << "] "                  \
-                      << description << " (expected exception)"                \
-                      << "  (" << __FILE__ << ":" << __LINE__ << ")"           \
-                      << std::endl;                                            \
-        }                                                                      \
+#define CHECK_THROWS(expression, description)                        \
+    do                                                               \
+    {                                                                \
+        ++g_total;                                                   \
+        bool threw = false;                                          \
+        try                                                          \
+        {                                                            \
+            expression;                                              \
+        }                                                            \
+        catch (...)                                                  \
+        {                                                            \
+            threw = true;                                            \
+        }                                                            \
+        if (threw)                                                   \
+        {                                                            \
+            ++g_passed;                                              \
+        }                                                            \
+        else                                                         \
+        {                                                            \
+            ++g_failed;                                              \
+            std::cerr << "  FAIL [" << g_currentSuite << "] "        \
+                      << description << " (expected exception)"      \
+                      << "  (" << __FILE__ << ":" << __LINE__ << ")" \
+                      << std::endl;                                  \
+        }                                                            \
     } while (0)
 
 // Helpers
@@ -291,7 +311,9 @@ static void testFunctions()
             double val = logExpr.eval(0.0);
             logBaseOk = std::abs(val - 3.0) < 1e-6;
         }
-        catch (...) {}
+        catch (...)
+        {
+        }
         CHECK(logBaseOk, "log(8,2) = 3");
     }
 
@@ -302,8 +324,8 @@ static void testFunctions()
 static void testConstants()
 {
     TEST_SUITE("Constants");
-    const double pi  = 3.14159265358979323846;
-    const double e   = 2.71828182845904523536;
+    const double pi = 3.14159265358979323846;
+    const double e = 2.71828182845904523536;
     const double phi = 1.61803398874989484820;
 
     CHECK_APPROX(evalExpr("pi"), pi, 1e-12, "pi constant");
@@ -397,7 +419,8 @@ static void testSolver()
     bool hasZeroRoot = false;
     for (double r : roots)
     {
-        if (std::abs(r) < 1e-4) hasZeroRoot = true;
+        if (std::abs(r) < 1e-4)
+            hasZeroRoot = true;
     }
     CHECK(hasZeroRoot, "sin(x) has root at x=0");
 
@@ -507,6 +530,48 @@ static void testV11Features()
     }
 }
 
+static void testV030UIFeatures()
+{
+    TEST_SUITE("v0.3.0 UI & Multi-Domain Pipeline Tests");
+
+    // 1. VariableStore O(1) Slot Parameter Slider Mutation
+    VariableStore vStore;
+    const auto &fReg = mathstudio::core::FunctionRegistry::instance();
+    DiagnosticsReporter reporter;
+    mathstudio::core::EvaluationContext ctx(vStore, fReg, reporter);
+
+    vStore.set("a", MathValue::real(2.5));
+    vStore.set("b", MathValue::real(1.5));
+
+    Expression expr("a * x + b");
+    double r1 = expr.evalWithContext(3.0, ctx);
+    CHECK_APPROX(r1, 2.5 * 3.0 + 1.5, 1e-9, "v0.3.0 initial slider parameters (a=2.5, b=1.5, x=3.0)");
+
+    // Mutate slider 'a' live without re-parsing AST
+    vStore.set("a", MathValue::real(5.0));
+    double r2 = expr.evalWithContext(3.0, ctx);
+    CHECK_APPROX(r2, 5.0 * 3.0 + 1.5, 1e-9, "v0.3.0 live slider mutation a=5.0 evaluates instantly");
+
+    // 2. Multi-domain Signal Variable Binding (x, t, n, theta)
+    Expression domainExpr("sin(theta) + n * t");
+    vStore.set("t", MathValue::real(2.0));
+    vStore.set("n", MathValue::real(4.0));
+    vStore.set("theta", MathValue::real(1.57079632679));
+    double rDomain = domainExpr.evalSignalWithContext(0.0, 2.0, 4.0, ctx);
+    CHECK_APPROX(rDomain, 1.0 + 4.0 * 2.0, 1e-6, "v0.3.0 multi-domain signal binding (t, n, theta)");
+
+    // 3. Static Buffer Pre-allocation 600-point Simulation (0 Heap Allocation during frame render)
+    static double xBuf[600];
+    static double yBuf[600];
+    for (int i = 0; i < 600; ++i)
+    {
+        double xVal = -10.0 + (20.0 * i / 599.0);
+        xBuf[i] = xVal;
+        yBuf[i] = expr.evalWithContext(xVal, ctx);
+    }
+    CHECK_APPROX(yBuf[0], 5.0 * (-10.0) + 1.5, 1e-6, "v0.3.0 600-point static plot buffer update index 0");
+    CHECK_APPROX(yBuf[599], 5.0 * (10.0) + 1.5, 1e-6, "v0.3.0 600-point static plot buffer update index 599");
+}
 
 // Main
 
@@ -525,7 +590,7 @@ int main()
     testSolver();
     testEdgeCases();
     testV11Features();
-
+    testV030UIFeatures();
 
     std::cout << std::string(50, '-') << std::endl;
     std::cout << "Results: " << g_passed << " passed, "

@@ -2,7 +2,29 @@
 All notable changes to MathStudio will be documented in this file.
 Format based on [Keep a Changelog](https://keepachangelog.com).
 
-## [Unreleased]
+## [v0.3.0] — Dear ImGui & ImPlot UI Overhaul Release - 2026-08-16
+
+### Added
+- **Dear ImGui Docking UI Subsystem (`src/ui/`)**: Built a modular, dockable windowing environment (`UIManager`, `ControlPanel`, `VariableInspectorPanel`, `PerformanceProfilerPanel`, `DiagnosticsConsolePanel`, `CanvasPanel`).
+- **FontAwesome 6 Vector Glyphs**: Integrated vector font atlas across all UI control buttons, dock tabs, status indicators, and slider badges.
+- **ImPlot Multi-Domain Visualizer**: Synchronized 2D canvas across **Cartesian $f(x)$**, **Time Domain $f(t)$**, **Discrete Series $f[n]$**, and **Polar $r(\theta)$** tabs.
+- **Live Variable Inspector**: Dynamic parameter controls with play/pause animations, slider bounds, CLI `--var` initializers, function prefix filters, auto-pruning, and trash `🗑` delete buttons.
+- **Real-Time Derivative Overlay `[D]`**: Keyboard shortcut `D` & toolbar toggle rendering real-time derivative curves $y = f'(x)$, velocity $\frac{df}{dt}$, and discrete difference $\Delta f[n]$ with color-family matching.
+- **Modular Application Architecture (`src/app/`, `src/cli/`)**: Decoupled monolithic `main.cpp` into clean `Application` (windowing & ImGui lifecycle), `CliParser` (command options & parsing), and `CliRunner` (batch mode execution) modules.
+- **Memory Leak & Diagnostic Audit Mode (`--check-leaks`)**: Command-line flag `--check-leaks` running MSVC CRT memory heap audits (`_CrtDumpMemoryLeaks`) on Windows, POSIX `getrusage` on Linux/macOS, and Valgrind CI leak checking verifying **0 memory leaks**.
+
+### Fixed
+- **CLI Parameter Preservation**: Resolved issue where `--var a=2.5 --var b=1.5` flags were overwritten to fallback `1.0` during initial auto-discovery.
+- **Time Domain & Discrete Solvers**: Passed `EvaluationContext` into `findRoots()` and `findExtrema()` across Time Domain $f(t)$ and Discrete $f[n]$ tabs, allowing live parameter sliders to update roots and peaks dynamically.
+- **Camera Viewport Synchronization**: Fixed static limit bug in Time Domain $f(t)$ and Discrete $f[n]$ tabs; panning and zooming via mouse, arrow keys, and zoom buttons now synchronize continuously across all domain tabs.
+- **Typo Parameter Prevention**: Filtered out intermediate function prefixes (`c`, `co`, `s`, `si`, `sq`) while expressions are incomplete, preventing partial function names from littering the variable table.
+- **Unreferenced Parameter Garbage Collection**: Automatically prunes stale parameter variables when removed from expression inputs.
+
+### Performance
+- **Zero-Allocation Plot Buffers**: Pre-allocated static sample vectors for 600 plot points per frame, eliminating per-frame heap allocations during active graph plotting.
+- **Process RAM Footprint**: Operates within a compact **24 MB – 86 MB** total OS memory working set.
+
+---
 
 ## [v0.2.0] — AST Compiler Architecture Release - 2026-08-09
 

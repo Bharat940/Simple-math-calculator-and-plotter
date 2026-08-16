@@ -1,0 +1,1065 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MathStudio Documentation — C++17 Computing & AST Engine</title>
+    <meta name="description"
+        content="Technical documentation for MathStudio: C++17 scientific computing engine, Pratt Parser compiler pipeline, Dear ImGui docking UI, ImPlot multi-domain canvas, and CLI utilities.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --color-bg-primary: #0d1117;
+            --color-bg-secondary: #161b22;
+            --color-bg-tertiary: #21262d;
+            --color-bg-code: #0b0e14;
+            --color-border: #30363d;
+            --color-border-subtle: #21262d;
+            --color-text-primary: #c9d1d9;
+            --color-text-heading: #f0f6fc;
+            --color-text-muted: #8b949e;
+            --color-accent: #58a6ff;
+            --color-success: #3fb950;
+            --color-warning: #d29922;
+            --sidebar-width: 270px;
+            --header-height: 60px;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        html,
+        body {
+            overflow-x: hidden;
+            width: 100%;
+            background-color: var(--color-bg-primary);
+            color: var(--color-text-primary);
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            font-size: 15px;
+            line-height: 1.6;
+        }
+
+        /* Universal Custom Scrollbar */
+        * {
+            scrollbar-width: thin;
+            scrollbar-color: #30363d #0d1117;
+        }
+
+        ::-webkit-scrollbar {
+            width: 7px;
+            height: 7px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #0d1117;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #30363d;
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #58a6ff;
+        }
+
+        /* Top Header Navbar */
+        header.top-nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: var(--header-height);
+            background-color: var(--color-bg-secondary);
+            border-bottom: 1px solid var(--color-border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 24px;
+            z-index: 100;
+        }
+
+        .brand-link {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-decoration: none;
+            color: var(--color-text-heading);
+            font-weight: 700;
+            font-size: 1.1rem;
+        }
+
+        .version-tag {
+            font-family: 'Fira Code', monospace;
+            font-size: 0.75rem;
+            background-color: rgba(63, 185, 80, 0.15);
+            color: var(--color-success);
+            border: 1px solid rgba(63, 185, 80, 0.3);
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-weight: 600;
+        }
+
+        .header-links {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .btn-gh {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background-color: var(--color-bg-tertiary);
+            border: 1px solid var(--color-border);
+            color: var(--color-text-heading);
+            padding: 6px 14px;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            text-decoration: none;
+            transition: border-color 0.15s;
+        }
+
+        .btn-gh:hover {
+            border-color: var(--color-accent);
+            color: #fff;
+        }
+
+        /* Sidebar Navigation */
+        aside.doc-sidebar {
+            width: var(--sidebar-width);
+            position: fixed;
+            top: var(--header-height);
+            bottom: 0;
+            left: 0;
+            background-color: var(--color-bg-secondary);
+            border-right: 1px solid var(--color-border);
+            overflow-y: auto;
+            padding: 20px 14px;
+        }
+
+        .nav-section-title {
+            font-size: 0.72rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            color: var(--color-text-muted);
+            margin: 16px 0 6px 8px;
+        }
+
+        .doc-sidebar ul {
+            list-style: none;
+        }
+
+        .doc-sidebar li a {
+            display: block;
+            padding: 5px 10px;
+            color: var(--color-text-primary);
+            text-decoration: none;
+            font-size: 0.88rem;
+            border-radius: 4px;
+            transition: all 0.15s;
+        }
+
+        .doc-sidebar li a:hover {
+            background-color: var(--color-bg-tertiary);
+            color: var(--color-accent);
+        }
+
+        /* Main Body Area */
+        main.doc-main {
+            margin-left: var(--sidebar-width);
+            margin-top: var(--header-height);
+            padding: 36px 48px 80px;
+            max-width: 980px;
+        }
+
+        h1 {
+            font-size: 2.1rem;
+            font-weight: 700;
+            color: var(--color-text-heading);
+            margin-bottom: 12px;
+            letter-spacing: -0.02em;
+        }
+
+        h2 {
+            font-size: 1.45rem;
+            font-weight: 700;
+            color: var(--color-text-heading);
+            margin: 40px 0 16px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--color-border-subtle);
+        }
+
+        h3 {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--color-text-heading);
+            margin: 24px 0 12px;
+        }
+
+        p {
+            margin-bottom: 16px;
+        }
+
+        ul,
+        ol {
+            margin-bottom: 16px;
+            padding-left: 22px;
+        }
+
+        li {
+            margin-bottom: 4px;
+        }
+
+        /* Modern Developer Code Block */
+        .code-block-container {
+            background-color: var(--color-bg-code);
+            border: 1px solid var(--color-border);
+            border-radius: 6px;
+            margin: 16px 0 24px;
+            overflow: hidden;
+        }
+
+        .code-header {
+            background-color: rgba(255, 255, 255, 0.03);
+            border-bottom: 1px solid var(--color-border-subtle);
+            padding: 8px 14px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-family: 'Fira Code', monospace;
+            font-size: 0.78rem;
+            color: var(--color-text-muted);
+        }
+
+        pre.code-content {
+            padding: 16px;
+            font-family: 'Fira Code', monospace;
+            font-size: 0.87rem;
+            line-height: 1.6;
+            overflow-x: auto;
+            color: #e6edf3;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+
+        .kw {
+            color: #ff7b72;
+        }
+
+        /* Keywords */
+        .fn {
+            color: #d2a8ff;
+        }
+
+        /* Functions */
+        .str {
+            color: #a5d6ff;
+        }
+
+        /* Strings */
+        .cm {
+            color: #8b949e;
+        }
+
+        /* Comments */
+        .num {
+            color: #79c0ff;
+        }
+
+        /* Numbers */
+
+        /* Video Showcase */
+        .media-box {
+            background-color: #000;
+            border: 1px solid var(--color-border);
+            border-radius: 6px;
+            overflow: hidden;
+            margin: 20px 0 32px;
+        }
+
+        .media-box video {
+            width: 100%;
+            display: block;
+            max-height: 480px;
+            object-fit: contain;
+        }
+
+        /* Image Grid Gallery */
+        .gallery-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
+            gap: 16px;
+            margin: 20px 0;
+        }
+
+        .gallery-card {
+            background-color: var(--color-bg-secondary);
+            border: 1px solid var(--color-border);
+            border-radius: 6px;
+            overflow: hidden;
+        }
+
+        .gallery-card a img {
+            width: 100%;
+            height: 220px;
+            object-fit: cover;
+            display: block;
+            border-bottom: 1px solid var(--color-border-subtle);
+            transition: opacity 0.15s;
+        }
+
+        .gallery-card a img:hover {
+            opacity: 0.9;
+        }
+
+        .gallery-card-body {
+            padding: 12px 14px;
+        }
+
+        .gallery-card-body strong {
+            display: block;
+            color: var(--color-text-heading);
+            font-size: 0.92rem;
+            margin-bottom: 4px;
+        }
+
+        .gallery-card-body span {
+            color: var(--color-text-muted);
+            font-size: 0.84rem;
+        }
+
+        /* Clean Technical Tables */
+        .table-wrapper {
+            width: 100%;
+            overflow-x: auto;
+            margin: 18px 0;
+            border: 1px solid var(--color-border);
+            border-radius: 6px;
+        }
+
+        table.clean-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.88rem;
+            text-align: left;
+        }
+
+        table.clean-table th,
+        table.clean-table td {
+            padding: 10px 14px;
+            border: 1px solid var(--color-border-subtle);
+            word-break: normal;
+            overflow-wrap: break-word;
+        }
+
+        table.clean-table th {
+            background-color: rgba(255, 255, 255, 0.03);
+            color: var(--color-text-heading);
+            font-weight: 600;
+            font-family: 'Fira Code', monospace;
+            font-size: 0.8rem;
+        }
+
+        table.clean-table tr:nth-child(even) {
+            background-color: rgba(255, 255, 255, 0.015);
+        }
+
+        code.inline-code {
+            font-family: 'Fira Code', monospace;
+            background-color: rgba(110, 118, 129, 0.18);
+            padding: 2px 5px;
+            border-radius: 4px;
+            font-size: 0.86rem;
+            color: var(--color-accent);
+        }
+
+        /* Mobile Hamburger Button */
+        .mobile-menu-btn {
+            display: none;
+            background: var(--color-bg-tertiary);
+            border: 1px solid var(--color-border);
+            color: var(--color-text-heading);
+            padding: 6px 10px;
+            border-radius: 6px;
+            cursor: pointer;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .mobile-menu-btn:hover {
+            border-color: var(--color-accent);
+        }
+
+        /* Responsive Mobile Layout */
+        @media (max-width: 960px) {
+            .mobile-menu-btn {
+                display: flex;
+            }
+
+            aside.doc-sidebar {
+                position: fixed;
+                top: var(--header-height);
+                left: 0;
+                right: 0;
+                bottom: 0;
+                width: 100%;
+                height: calc(100vh - var(--header-height));
+                background-color: var(--color-bg-secondary);
+                z-index: 90;
+                display: none;
+                overflow-y: auto;
+                padding: 24px 20px;
+                border-right: none;
+            }
+
+            aside.doc-sidebar.active {
+                display: block;
+            }
+
+            .doc-sidebar ul {
+                display: block;
+                padding-bottom: 24px;
+            }
+
+            .nav-section-title {
+                display: block;
+                font-size: 0.8rem;
+                color: var(--color-text-muted);
+                margin: 20px 0 8px 4px;
+            }
+
+            .doc-sidebar li a {
+                padding: 10px 14px;
+                font-size: 0.95rem;
+                background-color: var(--color-bg-primary);
+                border: 1px solid var(--color-border);
+                margin-bottom: 6px;
+                border-radius: 6px;
+            }
+
+            main.doc-main {
+                margin-left: 0;
+                margin-top: var(--header-height);
+                padding: 24px 16px 60px;
+                width: 100%;
+            }
+
+            .gallery-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Top Navigation Header -->
+    <header class="top-nav">
+        <a href="#" class="brand-link">
+            <span>MathStudio</span>
+            <span class="version-tag">v0.3.0</span>
+        </a>
+        <div class="header-links">
+            <a href="https://github.com/Bharat940/Simple-math-calculator-and-plotter" class="btn-gh" target="_blank">
+                <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24">
+                    <path
+                        d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z" />
+                </svg>
+                GitHub
+            </a>
+            <button class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Toggle navigation menu">
+                <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path d="M4 6h16M4 12h16M4 18h16"></path>
+                </svg>
+            </button>
+        </div>
+    </header>
+
+    <!-- Sidebar Navigation -->
+    <aside class="doc-sidebar">
+        <ul>
+            <li class="nav-section-title">Getting Started</li>
+            <li><a href="#quickstart">C++ API Example</a></li>
+            <li><a href="#demo">UI Execution Video</a></li>
+
+            <li class="nav-section-title">Core Subsystems</li>
+            <li><a href="#compiler">Pratt Parser AST Engine</a></li>
+            <li><a href="#memory">CRT Memory Audit</a></li>
+            <li><a href="#functions">Math Functions Spec</a></li>
+
+            <li class="nav-section-title">User Interface</li>
+            <li><a href="#docking">Docking Workspace</a></li>
+            <li><a href="#multidomain">Multi-Domain Canvas</a></li>
+            <li><a href="#shortcuts">Keyboard Shortcuts</a></li>
+            <li><a href="#gallery">Plot Showcase Gallery</a></li>
+
+            <li class="nav-section-title">Build & License</li>
+            <li><a href="#building">Build Instructions</a></li>
+            <li><a href="#cli">CLI Options Reference</a></li>
+            <li><a href="#benchmarks">Engine Benchmarks</a></li>
+            <li><a href="#licensing">Vendor Licensing</a></li>
+        </ul>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="doc-main">
+
+        <h1>MathStudio Engine Documentation</h1>
+        <p>A high-performance C++17 scientific computing engine and multi-domain grapher built with a Pratt Parser AST
+            compiler frontend, Dear ImGui docking UI, ImPlot charting, and zero memory leaks.</p>
+
+        <!-- C++ API Example -->
+        <section id="quickstart">
+            <h2>1. Quickstart C++ Integration Example</h2>
+            <p>Evaluating mathematical expressions using MathStudio's decoupled C++17 Pratt Parser compiler pipeline:
+            </p>
+
+            <div class="code-block-container">
+                <div class="code-header">
+                    <span>cpp / main.cpp</span>
+                    <span>C++17</span>
+                </div>
+                <pre class="code-content"><span class="cm">// Initialize EvaluationContext and AST Compiler Pipeline</span>
+<span class="kw">#include</span> <span class="str">&lt;compiler/PrattParser.hpp&gt;</span>
+<span class="kw">#include</span> <span class="str">&lt;compiler/visitors/EvalVisitor.hpp&gt;</span>
+
+<span class="kw">int</span> <span class="fn">main</span>() {
+    <span class="cm">// 1. Tokenize & Parse AST String</span>
+    <span class="kw">auto</span> tokens = mathstudio::<span class="fn">tokenize</span>(<span class="str">"a * sin(b * x)"</span>);
+    <span class="kw">auto</span> ast = mathstudio::<span class="fn">parse</span>(tokens);
+
+    <span class="cm">// 2. Set Up Variable Store (O(1) Slots)</span>
+    mathstudio::EvaluationContext ctx;
+    ctx.vars.<span class="fn">set</span>(<span class="str">"x"</span>, <span class="num">3.14159</span>);
+    ctx.vars.<span class="fn">set</span>(<span class="str">"a"</span>, <span class="num">2.5</span>);
+    ctx.vars.<span class="fn">set</span>(<span class="str">"b"</span>, <span class="num">1.5</span>);
+
+    <span class="cm">// 3. Evaluate AST Tree</span>
+    mathstudio::EvalVisitor visitor(ctx);
+    ast-&gt;<span class="fn">accept</span>(visitor);
+    <span class="kw">double</span> result = visitor.<span class="fn">getResult</span>();
+
+    std::cout &lt;&lt; <span class="str">"Evaluated Result: "</span> &lt;&lt; result &lt;&lt; std::endl;
+    <span class="kw">return</span> <span class="num">0</span>;
+}</pre>
+            </div>
+        </section>
+
+        <!-- UI Video Execution Demos -->
+        <section id="demo">
+            <h2>2. Video Demonstrations</h2>
+            <p>Interactive screen recordings of MathStudio in action:</p>
+            
+            <h3>Demo 1</h3>
+            <p>Function plotting and interactive UI overview:</p>
+            <div class="media-box">
+                <video controls poster="screenshots/01_damped_harmonic_wave.png">
+                    <source src="screenshots/mathstudio_v030_demo.mp4" type="video/mp4">
+                    Video playback not supported by browser.
+                </video>
+            </div>
+
+            <h3>Demo 2</h3>
+            <p>Live function plotting and parameter adjustments:</p>
+            <div class="media-box">
+                <video controls poster="screenshots/08_damped_oscillator_exponential_envelope.png">
+                    <source src="screenshots/Screen Recording 2026-08-16 193338.mp4" type="video/mp4">
+                    Video playback not supported by browser.
+                </video>
+            </div>
+
+            <h3>Demo 3</h3>
+            <p>Interactive graph visualization and curve inspections:</p>
+            <div class="media-box">
+                <video controls poster="screenshots/10_derivative_family_f_fprime_fsecond.png">
+                    <source src="screenshots/Screen Recording 2026-08-16 193537.mp4" type="video/mp4">
+                    Video playback not supported by browser.
+                </video>
+            </div>
+        </section>
+
+        <!-- Pratt Parser AST Engine -->
+        <section id="compiler">
+            <h2>3. Pratt Parser AST Compiler Architecture</h2>
+            <p>Expressions are parsed into an Abstract Syntax Tree (AST) using a binding-power Pratt Parser. AST nodes
+                are evaluated via single-pass C++17 <code>std::variant&lt;MathValue&gt;</code> visitor passes:</p>
+
+            <div class="code-block-container">
+                <div class="code-header">
+                    <span>AST Pass Pipeline</span>
+                </div>
+                <pre class="code-content">Input String ──► Tokenizer ──► PrattParser ──► AST (unique_ptr&lt;ASTNode&gt;)
+                                                  │
+ ┌────────────────────────────────────────────────┴─────────────────────────────────┐
+ │ PassManager Pipeline                                                             │
+ │  ├── ConstantFoldVisitor (Parse-time folding: 2*pi ──► 6.283185)                 │
+ │  ├── SimplifyVisitor     (Algebraic identity reduction: x*1 ──► x, sin(0) ──► 0) │
+ │  └── EvalVisitor         (O(1) direct slot evaluation + enum opcodes)            │
+ └────────────────────────────────────────────────┬─────────────────────────────────┘
+                                                  ▼
+                                     EvaluationContext & MathValue</pre>
+            </div>
+        </section>
+
+        <!-- Memory Audit -->
+        <section id="memory">
+            <h2>4. Memory Management & CRT Leak Audit</h2>
+            <p>MathStudio features a built-in MSVC C++ CRT heap allocation tracker (<code>_CrtDumpMemoryLeaks</code>)
+                and Windows process working set profiler accessible via <code>--check-leaks</code>:</p>
+
+            <div class="code-block-container">
+                <div class="code-header">
+                    <span>bash / console</span>
+                </div>
+                <pre class="code-content">$ .\build\mathstudio.exe -e "a * sin(b * x)" --var a=2.5 --var b=1.5 --check-leaks
+
+0
+
+==================================================
+       MEMORY LEAK & DIAGNOSTIC AUDIT REPORT      
+==================================================
+Peak Working Set RAM: 8.90 MB
+CRT Memory Audit: CLEAN (0 memory leaks detected!)
+==================================================</pre>
+            </div>
+        </section>
+
+        <!-- Functions Reference -->
+        <section id="functions">
+            <h2>5. Built-in Functions & Constants Reference</h2>
+            <div class="table-wrapper">
+                <table class="clean-table">
+                    <thead>
+                        <tr>
+                            <th>Category</th>
+                            <th>Supported Symbols</th>
+                            <th>Mathematical Functionality</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Trigonometric</strong></td>
+                            <td><code class="inline-code">sin</code>, <code class="inline-code">cos</code>, <code
+                                    class="inline-code">tan</code>, <code class="inline-code">asin</code>, <code
+                                    class="inline-code">acos</code>, <code class="inline-code">atan</code></td>
+                            <td>Standard and inverse trigonometric functions in radians.</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Hyperbolic</strong></td>
+                            <td><code class="inline-code">sinh</code>, <code class="inline-code">cosh</code>, <code
+                                    class="inline-code">tanh</code></td>
+                            <td>Hyperbolic sine, cosine, and tangent.</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Exponential & Log</strong></td>
+                            <td><code class="inline-code">exp</code>, <code class="inline-code">log</code>, <code
+                                    class="inline-code">log10</code>, <code class="inline-code">log(x, base)</code></td>
+                            <td>Natural exponential e<sup>x</sup>, natural log ln(x), base-10 log log<sub>10</sub>(x),
+                                and custom base log.</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Algebraic & Utility</strong></td>
+                            <td><code class="inline-code">sqrt</code>, <code class="inline-code">abs</code>, <code
+                                    class="inline-code">floor</code>, <code class="inline-code">ceil</code>, <code
+                                    class="inline-code">pow</code>, <code class="inline-code">max</code>, <code
+                                    class="inline-code">min</code></td>
+                            <td>Square root, absolute value, rounding, exponentiation x<sup>y</sup>, and bounds min/max.
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><strong>Constants</strong></td>
+                            <td><code class="inline-code">pi</code> (π), <code class="inline-code">e</code>, <code
+                                    class="inline-code">phi</code> (φ), <code class="inline-code">tau</code> (τ = 2π)
+                            </td>
+                            <td>High-precision constants (π ≈ 3.14159, e ≈ 2.71828, φ ≈ 1.61803, τ ≈ 6.28318).</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Docking Workspace -->
+        <section id="docking">
+            <h2>6. Docking Workspace Panels</h2>
+            <ul>
+                <li><strong>Scientific Plotter</strong>: ImPlot 2D canvas supporting Cartesian f(x), Time Domain f(t),
+                    Discrete f[n], and FFT Spectrogram tabs.</li>
+                <li><strong>Control Panel</strong>: Expression list with Z-index reordering, color pickers, active
+                    checkboxes, and grid limits.</li>
+                <li><strong>Variable Inspector</strong>: Parameter table featuring Play/Pause ▶/⏸ animation toggles,
+                    exact numeric entry (`Ctrl+Click`), and range bounds.</li>
+                <li><strong>Performance Profiler</strong>: Frame rate graph (FPS), uncached parse latency (ms), pass
+                    timings, and 100k-point evaluation throughput.</li>
+                <li><strong>Diagnostics Console</strong>: Position-aware syntax error reporting with caret indicators.
+                </li>
+            </ul>
+        </section>
+
+        <!-- Multi-Domain Canvas -->
+        <section id="multidomain">
+            <h2>7. Multi-Domain Canvas Tabs</h2>
+            <div class="table-wrapper">
+                <table class="clean-table">
+                    <thead>
+                        <tr>
+                            <th>Domain Tab</th>
+                            <th>Independent Variable</th>
+                            <th>Rendering Representation</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code class="inline-code">Cartesian f(x)</code></td>
+                            <td>x ∈ [x<sub>min</sub>, x<sub>max</sub>]</td>
+                            <td>Continuous real-axis waveform plot line with derivative overlay y = f'(x).</td>
+                        </tr>
+                        <tr>
+                            <td><code class="inline-code">Time Domain f(t)</code></td>
+                            <td>t ∈ [t<sub>min</sub>, t<sub>max</sub>]</td>
+                            <td>Signal waveform grapher with continuous velocity df/dt curve.</td>
+                        </tr>
+                        <tr>
+                            <td><code class="inline-code">Discrete f[n]</code></td>
+                            <td>n ∈ ℤ (integers)</td>
+                            <td>Discrete digital stem pins with circular heads and finite difference Δf[n].</td>
+                        </tr>
+                        <tr>
+                            <td><code class="inline-code">FFT Spectrogram</code></td>
+                            <td>f (Hz)</td>
+                            <td>Real-time Power Spectral Density |X(f)|² spectral analyzer.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Shortcuts -->
+        <section id="shortcuts">
+            <h2>8. GUI Controls & Keyboard Shortcuts</h2>
+            <div class="table-wrapper">
+                <table class="clean-table">
+                    <thead>
+                        <tr>
+                            <th>Shortcut / Control</th>
+                            <th>Engine Function</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Left Click + Drag</strong></td>
+                            <td>Pan viewport canvas smoothly across real axis</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Scroll Wheel</strong></td>
+                            <td>Smooth zoom in / zoom out relative to mouse cursor position</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Key <code class="inline-code">D</code></strong></td>
+                            <td>Toggle Real-Time Derivative Overlay (y = f'(x), df/dt, Δf[n])</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Key <code class="inline-code">R</code></strong></td>
+                            <td>Toggle Roots / Zeros markers and coordinate text callouts</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Key <code class="inline-code">E</code></strong></td>
+                            <td>Toggle Extrema (Min/Max/Saddle) markers and coordinate text callouts</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Key <code class="inline-code">T</code></strong></td>
+                            <td>Toggle Tangent line visualization at cursor position</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Key <code class="inline-code">G</code></strong></td>
+                            <td>Toggle Grid lines display</td>
+                        </tr>
+                        <tr>
+                            <td><strong><code class="inline-code">F11</code></strong></td>
+                            <td>Toggle Fullscreen Mode</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Plot Showcase Gallery -->
+        <section id="gallery">
+            <h2>9. Mathematical Plot Showcase Gallery</h2>
+            <p>Click on any screenshot below to open the full high-resolution image in a new browser tab.</p>
+
+            <div class="gallery-grid">
+                <div class="gallery-card">
+                    <a href="screenshots/01_damped_harmonic_wave.png" target="_blank" title="Click to view full image">
+                        <img src="screenshots/01_damped_harmonic_wave.png" alt="Damped Harmonic Wave">
+                    </a>
+                    <div class="gallery-card-body">
+                        <strong>Damped Harmonic Oscillator</strong>
+                        <span>Exponential decay envelope with derivative curve overlay `[D]` and extrema `[E]`.</span>
+                    </div>
+                </div>
+
+                <div class="gallery-card">
+                    <a href="screenshots/02_discrete_series_stem_plot.png" target="_blank"
+                        title="Click to view full image">
+                        <img src="screenshots/02_discrete_series_stem_plot.png" alt="Discrete Stem Plot">
+                    </a>
+                    <div class="gallery-card-body">
+                        <strong>Discrete Stem Series f[n]</strong>
+                        <span>Digital sequence stem pins rendered at integer sample indices n ∈ ℤ.</span>
+                    </div>
+                </div>
+
+                <div class="gallery-card">
+                    <a href="screenshots/03_quadratic_chirp_wave.png" target="_blank" title="Click to view full image">
+                        <img src="screenshots/03_quadratic_chirp_wave.png" alt="Quadratic Chirp Wave">
+                    </a>
+                    <div class="gallery-card-body">
+                        <strong>Quadratic Chirp Waveform</strong>
+                        <span>Radar chirp wave accelerating quadratically in frequency across horizontal real
+                            axis.</span>
+                    </div>
+                </div>
+
+                <div class="gallery-card">
+                    <a href="screenshots/04_normalized_sinc_function.png" target="_blank"
+                        title="Click to view full image">
+                        <img src="screenshots/04_normalized_sinc_function.png" alt="Normalized Sinc Function">
+                    </a>
+                    <div class="gallery-card-body">
+                        <strong>Normalized Sinc Function</strong>
+                        <span>Classic `sinc(x)` main lobe peak with decaying side lobes and zero-crossing roots
+                            `[R]`.</span>
+                    </div>
+                </div>
+
+                <div class="gallery-card">
+                    <a href="screenshots/05_quantum_wave_packet_tangent.png" target="_blank"
+                        title="Click to view full image">
+                        <img src="screenshots/05_quantum_wave_packet_tangent.png" alt="Quantum Wave Packet">
+                    </a>
+                    <div class="gallery-card-body">
+                        <strong>Quantum Wave Packet & Tangent</strong>
+                        <span>Gaussian wave envelope with tangent line `[T]` and cursor coordinate callout.</span>
+                    </div>
+                </div>
+
+                <div class="gallery-card">
+                    <a href="screenshots/06_quintic_quartic_intersections.png" target="_blank"
+                        title="Click to view full image">
+                        <img src="screenshots/06_quintic_quartic_intersections.png" alt="Quintic Quartic Intersections">
+                    </a>
+                    <div class="gallery-card-body">
+                        <strong>Quintic & Quartic Polynomials</strong>
+                        <span>Simultaneous multi-function plotting of 5th-degree and 4th-degree polynomials with 9 roots
+                            and extrema.</span>
+                    </div>
+                </div>
+
+                <div class="gallery-card">
+                    <a href="screenshots/07_harmonic_resonance_spectrum.png" target="_blank"
+                        title="Click to view full image">
+                        <img src="screenshots/07_harmonic_resonance_spectrum.png" alt="Harmonic Spectrum">
+                    </a>
+                    <div class="gallery-card-body">
+                        <strong>Harmonic Resonance Spectrum</strong>
+                        <span>Overlaid fundamental, 2nd, 3rd, and 4th harmonic sine waves in curated color-coded
+                            palette.</span>
+                    </div>
+                </div>
+
+                <div class="gallery-card">
+                    <a href="screenshots/08_damped_oscillator_exponential_envelope.png" target="_blank"
+                        title="Click to view full image">
+                        <img src="screenshots/08_damped_oscillator_exponential_envelope.png" alt="Envelope Pair">
+                    </a>
+                    <div class="gallery-card-body">
+                        <strong>Exponential Envelope Pair</strong>
+                        <span>Upper boundary +A · e<sup>-αx</sup>, lower boundary -A · e<sup>-αx</sup>, and inner damped
+                            cosine wave.</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Building from Source -->
+        <section id="building">
+            <h2>10. Building from Source (Linux, macOS, Windows)</h2>
+
+            <div class="code-block-container">
+                <div class="code-header">
+                    <span>bash / Linux (Ubuntu/Debian)</span>
+                </div>
+                <pre class="code-content">$ sudo apt-get update && sudo apt-get install -y cmake g++ libsdl2-dev libsdl2-ttf-dev
+$ git clone https://github.com/Bharat940/Simple-math-calculator-and-plotter.git
+$ cd Simple-math-calculator-and-plotter
+$ cmake -B build -DCMAKE_BUILD_TYPE=Release
+$ cmake --build build --config Release
+$ ./build/mathstudio "sin(x)"</pre>
+            </div>
+
+            <div class="code-block-container">
+                <div class="code-header">
+                    <span>powershell / Windows (MSVC + vcpkg)</span>
+                </div>
+                <pre class="code-content">$ vcpkg install sdl2 sdl2-ttf --triplet x64-windows
+$ cmake -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE="C:/Dev/vcpkg/scripts/buildsystems/vcpkg.cmake"
+$ cmake --build build --config Release
+$ .\build\Release\mathstudio.exe "a * sin(b * x) + t" --var a=2.5 --var b=1.5</pre>
+            </div>
+        </section>
+
+        <!-- CLI Reference -->
+        <section id="cli">
+            <h2>11. Command-Line Interface (CLI) Reference</h2>
+
+            <div class="code-block-container">
+                <div class="code-header">
+                    <span>powershell / CLI Commands</span>
+                </div>
+                <pre class="code-content"><span class="cm"># 1. Interactive GUI with Custom Parameters</span>
+$ .\build\mathstudio.exe "a * sin(b * x) + t" --var a=2.5 --var b=1.5 --var t=0.5
+
+<span class="cm"># 2. One-shot Expression Evaluation (-e)</span>
+$ .\build\mathstudio.exe -e "a * cos(b * x)" --var a=5.0 --var b=2.0
+
+<span class="cm"># 3. One-shot Equation Root Solver (-s)</span>
+$ .\build\mathstudio.exe -s "a * x^2 - b" --var a=1 --var b=9 --range -5 5
+
+<span class="cm"># 4. Function Intersection Detector (-i)</span>
+$ .\build\mathstudio.exe -i "x^2" "2*x + 1"
+
+<span class="cm"># 5. CRT Memory Leak Audit (--check-leaks)</span>
+$ .\build\mathstudio.exe --check-leaks "a * sin(b * x) + t"</pre>
+            </div>
+        </section>
+
+        <!-- Benchmarks -->
+        <section id="benchmarks">
+            <h2>12. Performance Benchmarks across Releases (v0.1.0 ──► v0.2.0 ──► v0.3.0)</h2>
+            <div class="table-wrapper">
+                <table class="clean-table">
+                    <thead>
+                        <tr>
+                            <th>Benchmark Metric</th>
+                            <th>v0.1.0 (Foundation Baseline)</th>
+                            <th>v0.2.0 (AST Compiler Release)</th>
+                            <th>v0.3.0 (ImGui UI Release)</th>
+                            <th>Evolution & Impact</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Uncached Parsing (1k expr)</strong></td>
+                            <td><code class="inline-code">96.08 ms</code> (Debug) / <code class="inline-code">2.538 ms</code> (Release)</td>
+                            <td><code class="inline-code">0.806 ms</code> (Release)</td>
+                            <td><code class="inline-code">2.128 ms</code> (~2.1 μs/expr)</td>
+                            <td>Pratt Parser operator binding table outpaces shunting-yard stack</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Eval Throughput (100k pts)</strong></td>
+                            <td><code class="inline-code">1329.58 ms</code> (Debug) / <code class="inline-code">497.42 ms</code> (Release)</td>
+                            <td><code class="inline-code">193.91 ms</code> (Release)</td>
+                            <td><code class="inline-code">369.162 ms</code> (~3.69 μs/pt)</td>
+                            <td><strong>3.6x speedup over v0.1.0</strong> via direct O(1) variable slot indexing</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Live Slider Mutation (10k steps)</strong></td>
+                            <td>N/A</td>
+                            <td>N/A</td>
+                            <td><code class="inline-code">39.910 ms</code> (~3.99 μs/step)</td>
+                            <td>Instant O(1) slot parameter updates without AST re-parsing</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Static 600-pt Render Buffer (1k frames)</strong></td>
+                            <td>N/A</td>
+                            <td>N/A</td>
+                            <td><code class="inline-code">1062.296 ms</code> (~1.06 ms/frame)</td>
+                            <td><strong>0 C++ heap allocations</strong> during active 60 FPS plotting</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Unit Test Pass Rate</strong></td>
+                            <td>68 Tests</td>
+                            <td>132 Tests</td>
+                            <td><code class="inline-code">137 / 137 PASS</code></td>
+                            <td>100% test pass rate across unit and AST compiler suites</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Process Memory Footprint</strong></td>
+                            <td><code class="inline-code">4.0 MB</code></td>
+                            <td><code class="inline-code">4.0 MB</code></td>
+                            <td><code class="inline-code">24.0 MB – 86.2 MB</code></td>
+                            <td>OS DWM DirectX swapchain & SDL2 windowing context</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Vendor Licensing -->
+        <section id="licensing">
+            <h2>13. Third-Party Vendor Licensing</h2>
+            <div class="table-wrapper">
+                <table class="clean-table">
+                    <thead>
+                        <tr>
+                            <th>Vendor Package</th>
+                            <th>License</th>
+                            <th>Usage Notice</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Dear ImGui</strong></td>
+                            <td>MIT License</td>
+                            <td>Docking UI windowing subsystem. Backend adaptations retained under MIT terms.</td>
+                        </tr>
+                        <tr>
+                            <td><strong>ImPlot</strong></td>
+                            <td>MIT License</td>
+                            <td>2D plotting substrate and stem/scatter visualizers.</td>
+                        </tr>
+                        <tr>
+                            <td><strong>FontAwesome 6 Free</strong></td>
+                            <td>SIL OFL 1.1 / MIT</td>
+                            <td>Embedded vector glyph byte array (<code
+                                    class="inline-code">FontAwesome6SolidData.h</code>).</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+    </main>
+
+    <script>
+        const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+        const sidebar = document.querySelector('.doc-sidebar');
+
+        if (mobileMenuBtn && sidebar) {
+            mobileMenuBtn.addEventListener('click', () => {
+                sidebar.classList.toggle('active');
+            });
+
+            document.querySelectorAll('.doc-sidebar a').forEach(link => {
+                link.addEventListener('click', () => {
+                    if (window.innerWidth <= 960) {
+                        sidebar.classList.remove('active');
+                    }
+                });
+            });
+        }
+    </script>
+</body>
+
+</html>

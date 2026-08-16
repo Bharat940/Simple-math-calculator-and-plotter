@@ -1,6 +1,11 @@
 #include "solver.h"
-#include <cmath>
 #include "numerical.h"
+#include "core/EvaluationContext.hpp"
+
+static double evalCtx(const Expression &expr, double val, mathstudio::core::EvaluationContext *ctx)
+{
+	return ctx ? expr.evalWithContext(val, *ctx) : expr.eval(val);
+}
 
 namespace
 {
@@ -81,6 +86,7 @@ namespace
 		const Expression &expr,
 		double x0,
 		double eps,
+		mathstudio::core::EvaluationContext *ctx,
 		int maxIter = 10)
 	{
 		(void)eps; // tolerance set by EPS_ROOT constants
@@ -88,8 +94,8 @@ namespace
 
 		for (int i = 0; i < maxIter; ++i)
 		{
-			double fx = expr.eval(x);
-			double dfx = derivative(expr, x);
+			double fx = evalCtx(expr, x, ctx);
+			double dfx = derivative(expr, x, EPS_DERIV, ctx);
 
 			if (!std::isfinite(fx) || !std::isfinite(dfx))
 			{
@@ -110,14 +116,14 @@ namespace
 
 			if (std::abs(xNext - x) < EPS_ROOT)
 			{
-				double res = std::abs(expr.eval(xNext));
+				double res = std::abs(evalCtx(expr, xNext, ctx));
 				return {xNext, true, i + 1, res};
 			}
 
 			x = xNext;
 		}
 
-		double res = std::abs(expr.eval(x));
+		double res = std::abs(evalCtx(expr, x, ctx));
 		return {x, false, maxIter, res};
 	}
 }
@@ -127,20 +133,21 @@ std::vector<SolverResult> findRootsDetailed(
 	double left,
 	double right,
 	double step,
-	double eps)
+	double eps,
+	mathstudio::core::EvaluationContext *ctx)
 {
 	std::vector<SolverResult> results;
 
 	auto roughRoots = solveZero(
 		[&](double x)
 		{
-			return expr.eval(x);
+			return evalCtx(expr, x, ctx);
 		},
 		left, right, step, eps);
 
 	for (double r : roughRoots)
 	{
-		SolverResult sr = newtonRefine(expr, r, eps);
+		SolverResult sr = newtonRefine(expr, r, eps, ctx);
 
 		if (std::abs(sr.x) < EPS_ROOT * 10)
 		{
@@ -158,11 +165,12 @@ std::vector<double> findRoots(
 	double left,
 	double right,
 	double step,
-	double eps)
+	double eps,
+	mathstudio::core::EvaluationContext *ctx)
 {
 	std::vector<double> out;
 
-	auto detailed = findRootsDetailed(expr, left, right, step, eps);
+	auto detailed = findRootsDetailed(expr, left, right, step, eps, ctx);
 	for (const auto &sr : detailed)
 	{
 		out.push_back(sr.x);
@@ -177,12 +185,13 @@ std::vector<double> findIntersections(
 	double left,
 	double right,
 	double step,
-	double eps)
+	double eps,
+	mathstudio::core::EvaluationContext *ctx)
 {
 	auto roots = solveZero(
 		[&](double x)
 		{
-			return f.eval(x) - g.eval(x);
+			return evalCtx(f, x, ctx) - evalCtx(g, x, ctx);
 		},
 		left, right, step, eps);
 
@@ -192,8 +201,8 @@ std::vector<double> findIntersections(
 
 		for (int i = 0; i < 10; ++i)
 		{
-			double h = f.eval(x) - g.eval(x);
-			double dh = derivative(f, x) - derivative(g, x);
+			double h = evalCtx(f, x, ctx) - evalCtx(g, x, ctx);
+			double dh = derivative(f, x, EPS_DERIV, ctx) - derivative(g, x, EPS_DERIV, ctx);
 
 			if (!std::isfinite(h) || !std::isfinite(dh))
 			{
@@ -231,12 +240,13 @@ std::vector<double> findExtrema(
 	double left,
 	double right,
 	double step,
-	double eps)
+	double eps,
+	mathstudio::core::EvaluationContext *ctx)
 {
 	return solveZero(
 		[&](double x)
 		{
-			return derivative(expr, x);
+			return derivative(expr, x, EPS_DERIV, ctx);
 		},
 		left, right, step, eps);
 }
@@ -246,18 +256,19 @@ std::vector<ExtremaResult> findExtremaDetailed(
 	double left,
 	double right,
 	double step,
-	double eps)
+	double eps,
+	mathstudio::core::EvaluationContext *ctx)
 {
-	auto extremaXs = findExtrema(expr, left, right, step, eps);
+	auto extremaXs = findExtrema(expr, left, right, step, eps, ctx);
 	std::vector<ExtremaResult> results;
 
 	for (double x : extremaXs)
 	{
-		double y = expr.eval(x);
+		double y = evalCtx(expr, x, ctx);
 		// Approximate second derivative using central difference:
 		double h = 1e-4;
-		double f_plus = expr.eval(x + h);
-		double f_minus = expr.eval(x - h);
+		double f_plus = evalCtx(expr, x + h, ctx);
+		double f_minus = evalCtx(expr, x - h, ctx);
 		double fpp = (f_plus - 2.0 * y + f_minus) / (h * h);
 
 		ExtremaKind kind = ExtremaKind::Unknown;

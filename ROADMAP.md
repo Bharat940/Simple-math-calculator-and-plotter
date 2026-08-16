@@ -42,24 +42,26 @@ graph TD
 
     v020["v0.2.0 AST Engine Architecture (Complete & Frozen)<br/>• Compiler Substructure (src/compiler/)<br/>• Pratt Parser Engine (Binding-Power Operator Table)<br/>• MathValue C++17 std::variant (double, complex, Matrix, Vector, bool)<br/>• EvaluationContext (Vars, Functions, Diagnostics)<br/>• Visitor Substrate (EvalVisitor, PrintVisitor)<br/>• PassManager Passes (ConstantFoldVisitor, SimplifyVisitor)<br/>• O(1) Variable Slots & Enum Opcodes (BinaryOpType, UnaryOpType)<br/>• ExpressionCache & Deprecate RPN to legacy/"] --> v030
 
-    v030["v0.3.0 Dear ImGui & ImPlot UI Overhaul (Next)<br/>• Dear ImGui (Docking Branch) Integration<br/>• ImPlot Signal & Performance Visualizers<br/>• Interactive Control Panels & Variable Inspectors"] --> v040
+    v030["v0.3.0 Dear ImGui & ImPlot UI Overhaul (Complete & Frozen)<br/>• Dear ImGui Docking UI Subsystem<br/>• ImPlot Multi-Domain Canvas (Cartesian, Time, Discrete, Polar)<br/>• Variable Inspector (sliders, Play/Pause ▶/⏸, --var CLI sync, trash 🗑 delete)<br/>• Real-time Derivative Curves [D] & Multi-domain Solvers<br/>• --check-leaks MSVC CRT Heap Audit (0 Leaks)<br/>• Zero-Allocation Plot Render Buffers"] --> v040
 
-    v040["v0.4.0 Calculus Engine<br/>• Symbolic Differentiation (DerivativeVisitor)<br/>• Numerical Integration (Simpson's 3/8, Adaptive Quadrature)<br/>• Limits & Taylor Series Expansion"] --> v050
+    v040["v0.4.0 Calculus Engine (Next)<br/>• Symbolic Differentiation (DerivativeVisitor)<br/>• Numerical Integration (Simpson's 3/8, Adaptive Quadrature)<br/>• Limits & Taylor Series Expansion<br/>• ASTArenaAllocator Pool Memory"] --> v050
 
-    v050["v0.5.0 Linear Algebra Engine<br/>• Typed Matrix Operations (Matrix<T>)<br/>• Determinants, Inverses, Eigenvalues"] --> v060
+    v050["v0.5.0 Signal Processing (DSP)<br/>• DFT → FFT → IFFT → Discrete Convolution Engine<br/>• Correlation, Window Functions (Hann, Hamming, Blackman)<br/>• Spectrogram & Dual-Domain Canvas<br/>• SIMD (AVX2) Vectorization"] --> v060
 
-    v060["v0.6.0 Signal Processing (DSP)<br/>• DFT → FFT → IFFT → Discrete Convolution Engine<br/>• Correlation, Window Functions (Hann, Hamming, Blackman)<br/>• Spectrogram & Dual-Domain Canvas"] --> v070
+    v060["v0.6.0 Linear Algebra Engine<br/>• Typed Matrix Operations (Matrix<T>)<br/>• Determinants, Inverses, Eigenvalues"] --> v070
 
     v070["v0.7.0 Computer Algebra System (CAS)<br/>• Full CAS Symbolic Engine<br/>• Polynomial Expansion & Factoring"] --> v080
 
-    v080["v0.8.0 Sessions & Project Serialization<br/>• AST Serialization to JSON<br/>• Multi-Level Undo / Redo & Session State Manager"] --> v100
+    v080["v0.8.0 Sessions & Project Serialization<br/>• AST Serialization to JSON<br/>• Multi-Level Undo / Redo & Session State Manager"] --> v085
+
+    v085["v0.8.5 Renderer Abstraction Layer<br/>• IRenderer Hardware Abstraction Interface<br/>• Modular Backends: SDL_Renderer | OpenGL | Vulkan | DirectX"] --> v100
 
     v100["v1.0.0 ★ Stable Scientific Computing Engine<br/>• Production Hardened Release"]
 
     style v010 fill:#e1f5fe,stroke:#01579b
     style v020 fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px
-    style v030 fill:#fff3e0,stroke:#ef6c00,stroke-width:2px
-    style v040 fill:#f3e5f5,stroke:#7b1fa2
+    style v030 fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px
+    style v040 fill:#fff3e0,stroke:#ef6c00,stroke-width:3px
     style v100 fill:#fff9c4,stroke:#fbc02d,stroke-width:2px
 ```
 
@@ -71,12 +73,13 @@ graph TD
 |---------|-------|--------|---------------------------------------|
 | **v0.1.0** | Foundation | ✅ Complete | C++17 refactoring, 132 unit tests, benchmark baseline, dark titlebar, coordinate labels |
 | **v0.2.0** | AST Engine Architecture | ✅ Complete & Frozen | `src/compiler/`, Pratt parser, `std::variant<MathValue>`, `EvaluationContext`, `ExpressionCache`, `ConstantFoldVisitor`, `SimplifyVisitor`, $O(1)$ variable slots, `BinaryOpType`/`UnaryOpType` enums |
-| **v0.3.0** | ImGui & ImPlot UI Overhaul | 📋 Next | Dear ImGui docking UI, ImPlot signal & performance charts, docked variable inspectors |
-| **v0.4.0** | Calculus Engine | 📋 Planned | Symbolic differentiation (`DerivativeVisitor`), numerical integration (Simpson's 3/8, Adaptive Quadrature), Taylor series |
-| **v0.5.0** | Linear Algebra | 📋 Planned | Matrix & Vector AST nodes, typed `Matrix<T>`, Gaussian elimination, determinants, eigenvalues |
-| **v0.6.0** | DSP & Signals | 📋 Planned | DFT, FFT, IFFT, discrete convolution, correlation, window functions, spectrogram visualization |
+| **v0.3.0** | ImGui & ImPlot UI Overhaul | ✅ Complete & Frozen | Dear ImGui docking UI, Render-to-Texture `CanvasPanel`, ImPlot multi-domain visualizers ($f(x)$, $f(t)$, $f[n]$, $r(\theta)$), `src/ui/widgets/` layer, Variable Inspector with trash `🗑` delete & `--var` CLI sync, `--check-leaks` MSVC CRT audit, zero-allocation buffers, real-time derivative curves `[D]` |
+| **v0.4.0** | Calculus Engine | 📋 Next | Symbolic differentiation (`DerivativeVisitor`), numerical integration (Simpson's 3/8, Adaptive Quadrature), Taylor series, `ASTArenaAllocator`, adaptive sub-pixel resampling |
+| **v0.5.0** | DSP & Signals | 📋 Planned | DFT, FFT, IFFT, discrete convolution, correlation, window functions, spectrogram visualization, SIMD (AVX2) vectorization |
+| **v0.6.0** | Linear Algebra | 📋 Planned | Matrix & Vector AST nodes, typed `Matrix<T>`, Gaussian elimination, determinants, eigenvalues |
 | **v0.7.0** | CAS Engine | 📋 Planned | Symbolic computer algebra system, polynomial expansion, factoring, symbolic simplification |
 | **v0.8.0** | Sessions & Serialization | 📋 Planned | AST JSON serialization, workspace project files, undo/redo manager |
+| **v0.8.5** | Renderer Abstraction | 📋 Planned | `IRenderer` interface decoupling renderer backends (`SDL_Renderer`, `OpenGL`, `Vulkan`, `DirectX`) |
 | **v1.0.0** | Major Milestone | 🎯 Goal | **Stable Scientific Computing Engine** |
 
 ---
@@ -98,3 +101,15 @@ graph TD
 1. **Pratt Parser Efficiency**: Eliminates operator stack shuffling, yielding **~4.1x faster uncached parsing** (23.33 ms vs 96.08 ms).
 2. **ExpressionCache Zero-Overhead**: Eliminates re-parsing on render loops (0.00 ms re-parse overhead).
 3. **AST as the Enabler for Passes**: The AST enables `ConstantFoldVisitor` (`2*pi*x -> 6.283185*x`), `SimplifyVisitor` (`x*1 -> x`), $O(1)$ variable array indexing, and AST arena memory allocation.
+
+---
+
+## 6. Comprehensive Optimization Strategy & Risk Matrix
+
+| Optimization | Description / Scope | Risk Profile | Implementation Target |
+| :--- | :--- | :---: | :--- |
+| **1. Zero-Allocation Plot Buffers** | Pre-allocates static sample vectors for 600 plot points per frame, eliminating frame-by-frame heap allocations. | **0% Risk** (Safe) | **v0.3.0 Complete** (Implemented & Verified) |
+| **2. `ASTArenaAllocator`** | Pre-allocates a 64 KB pool chunk for AST nodes, avoiding heap fragmentation and maximizing CPU L1 cache hits. | **Low Risk** | **v0.4.0 (Calculus Engine)** — Pairs with `DerivativeVisitor` |
+| **3. SIMD (AVX2 / SSE2) Vectorization** | Uses 256-bit AVX instructions (`_mm256_add_pd`) to evaluate 4 plot points per CPU cycle. | **Medium Risk** (Needs Fallback) | **v0.5.0 (DSP Engine)** — Critical for 4096-point FFT buffers |
+| **4. Adaptive Sub-Pixel Resampling** | Samples more points on high-curvature regions and fewer points on flat lines. | **Low Risk** | **v0.4.0 (Calculus Engine)** — Uses second derivative $f''(x)$ |
+

@@ -14,16 +14,37 @@
   <img src="https://img.shields.io/badge/Platform-Linux%20%7C%20macOS%20%7C%20Windows-lightgrey?style=flat-square" alt="Platform">
   <br>
   <img src="https://github.com/Bharat940/Simple-math-calculator-and-plotter/actions/workflows/build.yml/badge.svg" alt="Build and Test">
-  <a href="https://github.com/Bharat940/Simple-math-calculator-and-plotter/releases/tag/v0.2.0">
-    <img src="https://img.shields.io/badge/Release-v0.2.0-blue?style=flat-square&logo=github" alt="Latest Release">
+  <a href="https://github.com/Bharat940/Simple-math-calculator-and-plotter/releases/tag/v0.3.0">
+    <img src="https://img.shields.io/badge/Release-v0.3.0-blue?style=flat-square&logo=github" alt="Latest Release">
   </a>
 
-  <img src="https://img.shields.io/badge/Tests-132%20Passing-brightgreen?style=flat-square" alt="132 Passing Tests">
+  <img src="https://img.shields.io/badge/Tests-137%20Passing-brightgreen?style=flat-square" alt="137 Passing Tests">
+  <img src="https://img.shields.io/badge/Memory%20Leaks-0%20Clean-brightgreen?style=flat-square" alt="0 Memory Leaks">
 </p>
 
 ---
 
 ## Features
+
+### Dear ImGui & ImPlot UI Architecture (v0.3.0 Release)
+- **Dockable Window Layout**: Customizable, fixed-position docking workspace (`Scientific Plotter`, `Control Panel`, `Variable Inspector`, `Performance Profiler`, `Diagnostics Console`).
+- **FontAwesome 6 Vector Icons**: Crisp vector iconography integrated across all UI buttons, tabs, and status badges.
+- **Multi-Domain Canvas Tabs**:
+  - **Cartesian $f(x)$**: Continuous real-axis function grapher.
+  - **Time Domain $f(t)$**: Signal waveform plotter ($t \in [t_{min}, t_{max}]$).
+  - **Discrete Series $f[n]$**: Discrete stem plot series ($n \in \mathbb{Z}$).
+  - **FFT Spectrogram**: Real-time Power Spectral Density $|X(f)|^2$ analyzer.
+- **Interactive Variable Inspector**:
+  - Live parameter sliders with smooth Play ▶ / Pause ⏸ animation controls.
+  - Initial value preservation for CLI `--var a=2.5 --var b=1.5` flags.
+  - Smart typing protection (filters partial function name prefixes like `co`, `sq` while typing).
+  - Auto-pruning garbage collector for unreferenced parameters and dedicated Trash `🗑` Delete buttons.
+- **Real-Time Derivative Curve Overlay `[D]`**:
+  - Press key **`D`** or check **`Deriv [D]`** to render real-time derivative curves $y = f'(x)$, signal velocity $\frac{df}{dt}$, and discrete difference $\Delta f[n]$ with matching color family shading.
+- **Memory Leak & Diagnostic Audit Mode (`--check-leaks`)**:
+  - Command-line flag `--check-leaks` running MSVC CRT memory heap audits (`_CrtDumpMemoryLeaks`) and live process RAM (MB) meter verifying **0 memory leaks**.
+- **Zero-Allocation Render Loop**:
+  - Pre-allocated static sample vectors for 600 plot points per frame, eliminating heap allocations during graph plotting.
 
 ### Compiler-Driven AST Engine (v0.2.0 Architecture)
 - **Pratt Parser Frontend**: Binding-power operator table parser (`infixBindingPower`, `prefixBindingPower`). Handles operator precedence and associativity with precision.
@@ -145,73 +166,124 @@ cmake --build build
 
 ---
 
-## Usage
+---
 
-### GUI Mode
+## User Interface & Media Gallery
 
-```bash
-# Windows
-.\build\mathstudio.exe "x^3 - 3*x"
+### GitHub Pages Website & Video Demo
+🌐 **Interactive Web Landing Page**: [https://bharat940.github.io/Simple-math-calculator-and-plotter/](https://bharat940.github.io/Simple-math-calculator-and-plotter/)
 
-# Linux / macOS
-./build/mathstudio "sin(x), cos(x), tan(x)"
+MathStudio includes a full MP4 screen recording demo ([`docs/screenshots/mathstudio_v030_demo.mp4`](docs/screenshots/mathstudio_v030_demo.mp4)) and an extensive high-resolution screenshot gallery showcasing multi-domain charting, live parameter controls, and real-time derivative overlays:
 
-# Time-domain signal
-./build/mathstudio "sin(2*pi*t)"
-```
+<p align="center">
+  <img src="docs/screenshots/01_damped_harmonic_wave.png" alt="Damped Harmonic Wave" width="48%">
+  <img src="docs/screenshots/03_quadratic_chirp_wave.png" alt="Quadratic Chirp Wave" width="48%">
+</p>
+<p align="center">
+  <img src="docs/screenshots/06_quintic_quartic_intersections.png" alt="Quintic Quartic Intersections" width="48%">
+  <img src="docs/screenshots/07_harmonic_resonance_spectrum.png" alt="Harmonic Resonance Spectrum" width="48%">
+</p>
+<p align="center">
+  <img src="docs/screenshots/08_damped_oscillator_exponential_envelope.png" alt="Exponential Envelope Pair" width="48%">
+  <img src="docs/screenshots/09_taylor_series_sin_x.png" alt="Taylor Series Convergence" width="48%">
+</p>
 
-### CLI Mode
+### Classified Screenshot Index (`docs/screenshots/`)
 
-```bash
-# Evaluate at x = 0 (uses tau = 2*pi)
-.\build\mathstudio.exe -e "sin(tau/4)"
-# Output: 1
-
-# Scientific notation evaluation
-.\build\mathstudio.exe -e "1.5e-3 * 2e3"
-# Output: 3
-
-# Find roots of f(x) = 0
-.\build\mathstudio.exe -s "x^2 - 4"
-# Output: -2 2
-
-# Detailed solver output
-./build/mathstudio -s "x^3 - x" --verbose
-
-# Find intersections of f(x) = g(x)
-.\build\mathstudio.exe -i "x^2" "2*x + 1"
-# Output: -0.414214 2.41421
-```
-
-### All Options
-
-| Option | Description | Default |
-|--------|-------------|---------|
-| `--range xmin xmax` | Set solving/plotting range | -100 to 100 |
-| `--step value` | Solver step size | 0.1 |
-| `--precision value` | Numeric precision | 1e-6 |
-| `--zoom-step value` | Zoom sensitivity | 1.1 |
-| `--zoom-min value` | Minimum view range | 0.01 |
-| `--zoom-max value` | Maximum view range | 500 |
-| `--scale mode` | Grid scaling: `auto` / `fixed` / `loose` / `dense` | auto |
-| `--disc-threshold` | Asymptote discontinuity threshold | 10000 |
-| `--font path` | Custom font file path | System default |
-| `--verbose` | Detailed solver output | off |
+| Screenshot File | Description & Mathematical Content |
+| :--- | :--- |
+| **[`01_damped_harmonic_wave.png`](docs/screenshots/01_damped_harmonic_wave.png)** | Exponential decay envelope (`a*exp(-0.15*x)*sin(b*x)`) with derivative overlay `[D]` and extrema `[E]`. |
+| **[`02_discrete_series_stem_plot.png`](docs/screenshots/02_discrete_series_stem_plot.png)** | Discrete stem plot series (`0.8^n * sin(n*pi/4)`) with integer sample index pins $n \in \mathbb{Z}$. |
+| **[`03_quadratic_chirp_wave.png`](docs/screenshots/03_quadratic_chirp_wave.png)** | Quadratic radar chirp wave (`a*exp(-0.08*x)*sin(0.4*x^2)`) showing zero aliasing at high frequencies. |
+| **[`04_normalized_sinc_function.png`](docs/screenshots/04_normalized_sinc_function.png)** | Normalized `sinc(x)` function (`a*sin(b*x)/(b*x)`) with main lobe peak and decaying side lobes. |
+| **[`05_quantum_wave_packet_tangent.png`](docs/screenshots/05_quantum_wave_packet_tangent.png)** | Quantum Gaussian wave packet with mouse tangent line `[T]` and cursor coordinate callout. |
+| **[`06_quintic_quartic_intersections.png`](docs/screenshots/06_quintic_quartic_intersections.png)** | Simultaneous quintic polynomial (`x^5 - 5*x^3 + 4*x`) and quartic polynomial (`0.2*x^4 - 2*x^2 + 1`). |
+| **[`07_harmonic_resonance_spectrum.png`](docs/screenshots/07_harmonic_resonance_spectrum.png)** | 4 overlaid harmonic sine waves ($f, 2f, 3f, 4f$) with color-coded legends and zero-crossing roots `[R]`. |
+| **[`08_damped_oscillator_exponential_envelope.png`](docs/screenshots/08_damped_oscillator_exponential_envelope.png)** | Exponential envelope pair ($\pm A e^{-\alpha x}$) with inner oscillating damped cosine wave. |
+| **[`09_taylor_series_sin_x.png`](docs/screenshots/09_taylor_series_sin_x.png)** | Taylor series convergence for $\sin(x)$ showing 1st, 3rd, and 5th-order polynomial approximations. |
+| **[`10_derivative_family_f_fprime_fsecond.png`](docs/screenshots/10_derivative_family_f_fprime_fsecond.png)** | Original polynomial $f(x)$, velocity $f'(x)$, and acceleration $f''(x)$ family. |
+| **[`11_amplitude_modulation_sidebands.png`](docs/screenshots/11_amplitude_modulation_sidebands.png)** | Amplitude modulation (AM radio wave) showing high-frequency carrier compressed within audio envelope. |
+| **[`mathstudio_v030_demo.mp4`](docs/screenshots/mathstudio_v030_demo.mp4)** | **Full MP4 Video Demo Recording** demonstrating interactive UI, live sliders, and plotting performance. |
 
 ---
 
-## GUI Controls
+### GUI Mode & Custom Parameters
 
-| Key | Action |
-|-----|--------|
-| Mouse Wheel | Zoom in / out |
-| Arrow Keys | Pan the viewport |
-| T | Toggle tangent line at cursor |
-| G | Toggle grid |
-| R | Toggle roots (zeros) display & canvas text labels |
-| E | Toggle extrema (min/max/saddle) display & canvas text labels |
-| Tab | Cycle through active function |
-| ESC | Quit |
+```powershell
+# Launch with default expression
+.\build\mathstudio.exe "sin(x), cos(x)"
+
+# Launch with custom parameter initializers
+.\build\mathstudio.exe "a * sin(b * x) + t" --var a=2.5 --var b=1.5 --var t=0.5
+
+# Launch in Memory Leak Audit Mode (CRT Leak Detection)
+.\build\mathstudio.exe --check-leaks "a * sin(b * x) + t"
+```
+
+---
+
+### CLI Evaluation & Solver Modes
+
+```bash
+# 1. One-shot Expression Evaluation (-e)
+.\build\mathstudio.exe -e "a * cos(b * x)" --var a=5.0 --var b=2.0
+# Output: 5.0
+
+# 2. Equation Root Solving (-s)
+.\build\mathstudio.exe -s "a * x^2 - b" --var a=1 --var b=9 --range -5 5
+# Output: x = -3, x = 3
+
+# 3. Intersections between f(x) and g(x) (-i)
+.\build\mathstudio.exe -i "x^2" "2*x + 1"
+# Output: x = -0.414214, y = 0.171573 | x = 2.41421, y = 5.82843
+
+# 4. Memory Heap Audit Mode (--check-leaks)
+.\build\mathstudio.exe -e "a * sin(b * x)" --var a=2.5 --var b=1.5 --check-leaks
+# Output:
+# 0
+# ==================================================
+#        MEMORY LEAK & DIAGNOSTIC AUDIT REPORT      
+# ==================================================
+# Peak Working Set RAM: 8.90 MB
+# CRT Memory Audit: CLEAN (0 memory leaks detected!)
+# ==================================================
+```
+
+---
+
+### Command Line Options Reference
+
+| Option | Description | Example / Range |
+| :--- | :--- | :--- |
+| **`--var name=val`** | Pre-register parameter initial value | `--var a=2.5 --var b=1.5` |
+| **`--check-leaks`** | Enable CRT memory leak & RAM diagnostic report | `mathstudio --check-leaks "sin(x)"` |
+| **`-e "expr"`** | Evaluate expression in one-shot CLI mode | `-e "2*pi*5"` |
+| **`-s "expr"`** | Solve roots $f(x)=0$ in one-shot CLI mode | `-s "x^2 - 4"` |
+| **`-i "f" "g"`** | Find intersections between $f(x)$ and $g(x)$ | `-i "x^2" "2*x+1"` |
+| **`--range min max`** | Viewport or solver search domain | `--range -10 10` |
+| **`--precision val`** | Solver convergence tolerance threshold | `--precision 1e-6` |
+| **`--scale mode`** | Grid scale mode (`auto`, `fixed`, `loose`, `dense`) | `--scale fixed` |
+| **`--disc-threshold`**| Discontinuity asymptote threshold | `--disc-threshold 10000` |
+| **`--verbose`** | Print detailed Newton-Raphson iterations | `--verbose` |
+
+---
+
+### GUI Keyboard Shortcuts & Controls
+
+| Shortcut / Control | Action / Purpose |
+| :--- | :--- |
+| **Left Click + Drag** | Pan viewport canvas smoothly across real axis |
+| **Scroll Wheel** | Smooth zoom in / zoom out relative to mouse cursor |
+| **Arrow Keys** | Pan viewport navigation |
+| **Key `D`** | Toggle Real-Time Derivative Overlay ($y = f'(x)$, $\frac{df}{dt}$, $\Delta f[n]$) |
+| **Key `R`** | Toggle Roots / Zeros markers and coordinate text callouts |
+| **Key `E`** | Toggle Extrema (Min/Max/Saddle) markers and coordinate text callouts |
+| **Key `T`** | Toggle Tangent line visualization at cursor position |
+| **Key `G`** | Toggle Grid lines display |
+| **`Ctrl + Click` / Double Click** | Exact decimal entry on parameter sliders |
+| **`↺` Reset Button** | Reset parameter slider to default value (`1.0` or initial CLI `--var`) |
+| **`🗑` Trash Button** | Delete parameter variable from Variable Inspector |
+| **`View -> Lock Panel Positions`** | Lock workspace windows to prevent accidental dragging |
 
 ---
 
@@ -478,11 +550,9 @@ v0.0.1  ✅  Prototype Release — initial RPN evaluator & basic plotter
   ↓
 v0.1.0  ✅  Foundation Release — refactoring, 132 tests, benchmark suite, dark titlebar
   ↓
-v0.2.0  ✅  AST Architecture Rewrite (Complete & Frozen) — Pratt Parser, MathValue variant, ConstantFoldVisitor, SimplifyVisitor, O(1) Slots, Enum Opcodes
+v0.3.0  ✅  Dear ImGui & ImPlot UI Overhaul (Complete & Frozen) — Multi-domain canvas f(x)/f(t)/f[n]/r(θ), Variable Inspector, --check-leaks CRT audit, zero-alloc buffers
   ↓
-v0.3.0  📋  Dear ImGui & ImPlot UI Overhaul (Next) — Docked control panels, variable inspectors, live performance visualizers
-  ↓
-v0.4.0  📋  Calculus Engine — Symbolic differentiation (DerivativeVisitor), numerical integration, limits, Taylor series
+v0.4.0  📋  Calculus Engine (Next) — Symbolic differentiation (DerivativeVisitor), numerical integration, limits, Taylor series, ASTArenaAllocator
   ↓
 v0.5.0  📋  Linear Algebra Engine — Typed Matrix wrapper (Matrix<T>), determinants, eigenvalues
   ↓
@@ -527,6 +597,23 @@ Contributions are welcome! Whether you're fixing a bug, suggesting a feature, or
 3. **Commit** your changes (`git commit -m 'Add AmazingFeature'`).
 4. **Push** to the branch (`git push origin feature/AmazingFeature`).
 5. Open a **Pull Request**.
+
+---
+
+## Third-Party Libraries & Licensing
+
+MathStudio bundles select open-source libraries under permissive licenses to ensure instant, standalone zero-setup compilation across all platforms:
+
+| Library | Directory / Location | License | Description & Usage |
+| :--- | :--- | :---: | :--- |
+| **Dear ImGui** | `external/imgui/` | **MIT License** | Docking branch UI panel system, widgets, and layout manager. Custom backend adaptations applied under MIT terms. |
+| **ImPlot** | `external/implot/` | **MIT License** | 2D graphing substrate, stem plots, scatter markers, and multi-domain visualizers. |
+| **FontAwesome 6 Free** | `src/ui/fonts/` | **SIL OFL 1.1 / MIT** | Crisp vector iconography (`fa-solid-900.ttf`). Embedded directly into compiled C++ byte arrays (`FontAwesome6SolidData.h` & `IconsFontAwesome6.h`) for 100% standalone execution without file dependencies. |
+| **SDL2 & SDL2_ttf** | System / vcpkg | **zlib / SIL OFL** | Cross-platform window creation, hardware renderer, input event loop, and TTF font atlas support. |
+
+### Open-Source Compliance & Code Modification Rules
+- **Modifications**: All modifications to ImGui/ImPlot backends (`imgui_impl_sdl2`, `imgui_impl_sdlrenderer2`) retain original copyright headers and fully comply with MIT License terms.
+- **Font Distribution**: FontAwesome Free is redistributed under the SIL Open Font License 1.1 (OFL), allowing full embedding, bundling, and commercial distribution.
 
 ---
 

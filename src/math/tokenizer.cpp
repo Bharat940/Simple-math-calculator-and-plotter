@@ -1,5 +1,6 @@
 #include "tokenizer.h"
 #include "constants_registry.h"
+#include "core/FunctionRegistry.hpp"
 
 #include <cctype>    // std::isdigit, std::isalpha, std::isspace
 #include <stdexcept> // std::runtime_error
@@ -116,12 +117,22 @@ std::vector<Token> tokenize(const std::string &expr)
             const auto &constants = getConstantRegistry();
             Token newTok;
 
-            // Recognized variable names: x (standard), t (time/signal), n (discrete index)
-            static const std::unordered_set<std::string> VARIABLES = {"x", "t", "n"};
+            // Recognized system signals always tokenize as Variable
+            static const std::unordered_set<std::string> VARIABLES = {"x", "t", "n", "theta", "z", "ans"};
+
+            // Peek ahead to see if followed by '(' (Function invocation)
+            size_t nextIdx = i;
+            while (nextIdx < expr.length() && std::isspace(expr[nextIdx]))
+                ++nextIdx;
+            bool followedByParen = (nextIdx < expr.length() && expr[nextIdx] == '(');
 
             if (VARIABLES.count(name))
             {
                 newTok = {TokenType::Variable, name};
+            }
+            else if (mathstudio::core::FunctionRegistry::instance().has(name) || followedByParen)
+            {
+                newTok = {TokenType::Function, name};
             }
             else if (constants.count(name))
             {
@@ -129,7 +140,8 @@ std::vector<Token> tokenize(const std::string &expr)
             }
             else
             {
-                newTok = {TokenType::Function, name};
+                // Any other standalone parameter name (a, b, k, frequency, offset, m, c, etc.) is a Variable
+                newTok = {TokenType::Variable, name};
             }
 
             if (!tokens.empty() &&

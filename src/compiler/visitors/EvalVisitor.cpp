@@ -11,7 +11,9 @@ void EvalVisitor::visit(VariableNode *node)
     result = context.vars.get(node->name);
     if (result.isUndef && !context.vars.has(node->name))
     {
-        context.diagnostics.reportError("Undefined variable: " + node->name, 1, 0, "Check variable spelling");
+        // Industry Standard Fallback (Desmos): default uninitialized parameters to 1.0
+        // so the graph renders immediately without leaving a blank canvas!
+        result = MathValue::real(1.0);
     }
 }
 

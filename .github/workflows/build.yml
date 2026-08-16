@@ -2,7 +2,7 @@ name: Build, Test & Release
 
 on:
   push:
-    branches: [ main, master, v0.2.0-ast-rewrite ]
+    branches: [ main, master, v0.2.0-ast-rewrite, v0.3.0-imgui-ui ]
     tags: [ 'v*' ]
   pull_request:
     branches: [ main, master ]
@@ -27,7 +27,7 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y cmake g++ libsdl2-dev libsdl2-ttf-dev
+          sudo apt-get install -y cmake g++ libsdl2-dev libsdl2-ttf-dev valgrind
 
       - name: Configure
         run: cmake -B build -DCMAKE_BUILD_TYPE=Release
@@ -35,15 +35,25 @@ jobs:
       - name: Build
         run: cmake --build build --config Release
 
-      - name: Run unit tests (132 tests + 9 AST tests)
+      - name: Run unit tests (137 tests + 9 AST tests)
         run: |
           ./build/tests
           ./build/test_ast
 
-      - name: Run benchmarks
+      - name: Run Valgrind dynamic memory leak audit
+        run: |
+          valgrind --leak-check=full --show-leak-kinds=all --error-exitcode=1 ./build/tests
+          valgrind --leak-check=full --show-leak-kinds=all --error-exitcode=1 ./build/test_ast
+
+      - name: Run benchmarks & CLI leak check
         run: |
           ./build/benchmarks
           ./build/bench_v0.2.0
+          ./build/bench_v0.3.0
+          ./build/mathstudio -e "a*sin(b*x)" --var a=2.5 --var b=1.5 --check-leaks
+          ./build/mathstudio -s "x^2 - 4" --check-leaks
+          ./build/mathstudio -i "x^2" "2*x + 1"
+          ./build/mathstudio -d "sin(x)"
 
       - name: Prepare artifact
         run: cp build/mathstudio mathstudio-linux
@@ -82,15 +92,20 @@ jobs:
       - name: Build
         run: cmake --build build --config Release
 
-      - name: Run unit tests (132 tests + 9 AST tests)
+      - name: Run unit tests (137 tests + 9 AST tests)
         run: |
           ./build/tests
           ./build/test_ast
 
-      - name: Run benchmarks
+      - name: Run benchmarks & CLI leak check
         run: |
           ./build/benchmarks
           ./build/bench_v0.2.0
+          ./build/bench_v0.3.0
+          ./build/mathstudio -e "a*sin(b*x)" --var a=2.5 --var b=1.5 --check-leaks
+          ./build/mathstudio -s "x^2 - 4" --check-leaks
+          ./build/mathstudio -i "x^2" "2*x + 1"
+          ./build/mathstudio -d "sin(x)"
 
       - name: Prepare artifact
         run: cp build/mathstudio mathstudio-macos
@@ -119,25 +134,30 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Install dependencies
-        run: vcpkg install sdl2 sdl2-ttf --triplet x64-windows
+        run: vcpkg install sdl2 sdl2-ttf --triplet x64-windows-static
         env:
           VCPKG_BINARY_SOURCES: "clear"
 
       - name: Configure
-        run: cmake -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE=C:/vcpkg/scripts/buildsystems/vcpkg.cmake
+        run: cmake -B build -DCMAKE_BUILD_TYPE=Release -DVCPKG_TARGET_TRIPLET=x64-windows-static -DCMAKE_TOOLCHAIN_FILE=C:/vcpkg/scripts/buildsystems/vcpkg.cmake
 
       - name: Build
         run: cmake --build build --config Release
 
-      - name: Run unit tests (132 tests + 9 AST tests)
+      - name: Run unit tests (137 tests + 9 AST tests)
         run: |
           .\build\Release\tests.exe
           .\build\Release\test_ast.exe
 
-      - name: Run benchmarks
+      - name: Run benchmarks & MSVC CRT memory leak check
         run: |
           .\build\Release\benchmarks.exe
           .\build\Release\bench_v0.2.0.exe
+          .\build\Release\bench_v0.3.0.exe
+          .\build\Release\mathstudio.exe -e "a*sin(b*x)" --var a=2.5 --var b=1.5 --check-leaks
+          .\build\Release\mathstudio.exe -s "x^2 - 4" --check-leaks
+          .\build\Release\mathstudio.exe -i "x^2" "2*x + 1"
+          .\build\Release\mathstudio.exe -d "sin(x)"
 
       - name: Prepare artifact
         run: Copy-Item build\Release\mathstudio.exe mathstudio-windows.exe

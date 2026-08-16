@@ -110,6 +110,7 @@ int main()
     auto simplified3 = simp.run(p3.parse());
     auto num3 = dynamic_cast<NumberNode *>(simplified3.get());
     assert(num3 && num3->value == 0.0);
+    (void)num3;
 
     // Test sin(0) -> 0
     auto tokens4 = tokenize("sin(0)");
@@ -117,6 +118,7 @@ int main()
     auto simplified4 = simp.run(p4.parse());
     auto num4 = dynamic_cast<NumberNode *>(simplified4.get());
     assert(num4 && num4->value == 0.0);
+    (void)num4;
 
     std::cout << "Step 9 passed, all SimplifyVisitor rules verified!\n"
               << std::flush;

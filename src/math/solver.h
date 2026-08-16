@@ -3,6 +3,11 @@
 #include "constants.h"
 #include "expression.h"
 
+namespace mathstudio::core
+{
+	struct EvaluationContext;
+}
+
 struct SolverResult
 {
 	double x;
@@ -16,14 +21,16 @@ std::vector<double> findRoots(
 	double left,
 	double right,
 	double step = 0.1,
-	double eps = EPS_ROOT);
+	double eps = EPS_ROOT,
+	mathstudio::core::EvaluationContext *ctx = nullptr);
 
 std::vector<SolverResult> findRootsDetailed(
 	const Expression &expr,
 	double left,
 	double right,
 	double step = 0.1,
-	double eps = EPS_ROOT);
+	double eps = EPS_ROOT,
+	mathstudio::core::EvaluationContext *ctx = nullptr);
 
 std::vector<double> findIntersections(
 	const Expression &f,
@@ -31,7 +38,8 @@ std::vector<double> findIntersections(
 	double left,
 	double right,
 	double step = 0.1,
-	double eps = EPS_ROOT);
+	double eps = EPS_ROOT,
+	mathstudio::core::EvaluationContext *ctx = nullptr);
 
 enum class ExtremaKind
 {
@@ -53,11 +61,13 @@ std::vector<double> findExtrema(
 	double left,
 	double right,
 	double step = 0.1,
-	double eps = EPS_ROOT);
+	double eps = EPS_ROOT,
+	mathstudio::core::EvaluationContext *ctx = nullptr);
 
 std::vector<ExtremaResult> findExtremaDetailed(
 	const Expression &expr,
 	double left,
 	double right,
 	double step = 0.1,
-	double eps = EPS_ROOT);
+	double eps = EPS_ROOT,
+	mathstudio::core::EvaluationContext *ctx = nullptr);
