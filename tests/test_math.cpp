@@ -569,6 +569,8 @@ static void testV030UIFeatures()
         xBuf[i] = xVal;
         yBuf[i] = expr.evalWithContext(xVal, ctx);
     }
+    CHECK_APPROX(xBuf[0], -10.0, 1e-6, "v0.3.0 600-point static x buffer index 0");
+    CHECK_APPROX(xBuf[599], 10.0, 1e-6, "v0.3.0 600-point static x buffer index 599");
     CHECK_APPROX(yBuf[0], 5.0 * (-10.0) + 1.5, 1e-6, "v0.3.0 600-point static plot buffer update index 0");
     CHECK_APPROX(yBuf[599], 5.0 * (10.0) + 1.5, 1e-6, "v0.3.0 600-point static plot buffer update index 599");
 }

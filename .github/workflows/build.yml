@@ -35,7 +35,7 @@ jobs:
       - name: Build
         run: cmake --build build --config Release
 
-      - name: Run unit tests (137 tests + 9 AST tests)
+      - name: Run unit tests (139 tests + 9 AST tests)
         run: |
           ./build/tests
           ./build/test_ast
@@ -92,7 +92,7 @@ jobs:
       - name: Build
         run: cmake --build build --config Release
 
-      - name: Run unit tests (137 tests + 9 AST tests)
+      - name: Run unit tests (139 tests + 9 AST tests)
         run: |
           ./build/tests
           ./build/test_ast
@@ -142,7 +142,7 @@ jobs:
       - name: Build
         run: cmake --build build --config Release
 
-      - name: Run unit tests (137 tests + 9 AST tests)
+      - name: Run unit tests (139 tests + 9 AST tests)
         run: |
           .\build\Release\tests.exe
           .\build\Release\test_ast.exe

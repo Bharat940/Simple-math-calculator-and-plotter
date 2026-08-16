@@ -24,7 +24,7 @@
 | **5. Find Extrema `x^3 - 3x` in `[-5, 5]`** | 1.68 ms (Debug) / 0.548 ms (Release) | 0.351 ms (Release) | **0.648 ms** (Release) | ms / range | Extrema classification pass (Min / Max / Saddle) |
 | **6. Live Slider Mutation (10k steps)** | N/A | N/A | **39.910 ms** | ms / 10,000 steps | Instant $O(1)$ slot parameter updates (~3.99 μs / step) |
 | **7. Static 600-pt Render Buffer** | N/A | N/A | **1062.296 ms** | ms / 1,000 frames | **Zero C++ heap allocation** during active 60 FPS plotting (~1.06 ms / frame) |
-| **8. Unit Test Suite Pass Rate** | 68 Tests | 132 Tests | **137 / 137 PASS** | Passing Tests | 100% PASS across unit and AST compiler suites |
+| **8. Unit Test Suite Pass Rate** | 68 Tests | 132 Tests | **139 / 139 PASS** | Passing Tests | 100% PASS across unit and AST compiler suites |
 | **9. CRT Memory Heap Leaks** | 0 Leaks | 0 Leaks | **0 Memory Leaks** | Heap Allocation | MSVC CRT Heap Audit Verified (`CLEAN`) |
 | **10. Process Working Set RAM** | 4.0 MB (CLI) | 4.0 MB (CLI) | **24.0 MB – 86.2 MB** | Peak RAM | OS DWM DirectX swapchain & Dear ImGui docking UI context |
 

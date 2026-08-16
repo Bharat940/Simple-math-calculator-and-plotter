@@ -18,7 +18,7 @@
     <img src="https://img.shields.io/badge/Release-v0.3.0-blue?style=flat-square&logo=github" alt="Latest Release">
   </a>
 
-  <img src="https://img.shields.io/badge/Tests-137%20Passing-brightgreen?style=flat-square" alt="137 Passing Tests">
+  <img src="https://img.shields.io/badge/Tests-139%20Passing-brightgreen?style=flat-square" alt="139 Passing Tests">
   <img src="https://img.shields.io/badge/Memory%20Leaks-0%20Clean-brightgreen?style=flat-square" alt="0 Memory Leaks">
 </p>
 
