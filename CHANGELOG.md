@@ -7,7 +7,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com).
 ### Added
 - **Dear ImGui Docking UI Subsystem (`src/ui/`)**: Built a modular, dockable windowing environment (`UIManager`, `ControlPanel`, `VariableInspectorPanel`, `PerformanceProfilerPanel`, `DiagnosticsConsolePanel`, `CanvasPanel`).
 - **FontAwesome 6 Vector Glyphs**: Integrated vector font atlas across all UI control buttons, dock tabs, status indicators, and slider badges.
-- **ImPlot Multi-Domain Visualizer**: Synchronized 2D canvas across **Cartesian $f(x)$**, **Time Domain $f(t)$**, **Discrete Series $f[n]$**, and **Polar $r(\theta)$** tabs.
+- **ImPlot Multi-Domain Visualizer**: Synchronized 2D canvas across **Cartesian $f(x)$**, **Time Domain $f(t)$**, **Discrete Series $f[n]$**, and **FFT Spectrogram** tabs.
 - **Live Variable Inspector**: Dynamic parameter controls with play/pause animations, slider bounds, CLI `--var` initializers, function prefix filters, auto-pruning, and trash `🗑` delete buttons.
 - **Real-Time Derivative Overlay `[D]`**: Keyboard shortcut `D` & toolbar toggle rendering real-time derivative curves $y = f'(x)$, velocity $\frac{df}{dt}$, and discrete difference $\Delta f[n]$ with color-family matching.
 - **Modular Application Architecture (`src/app/`, `src/cli/`)**: Decoupled monolithic `main.cpp` into clean `Application` (windowing & ImGui lifecycle), `CliParser` (command options & parsing), and `CliRunner` (batch mode execution) modules.
