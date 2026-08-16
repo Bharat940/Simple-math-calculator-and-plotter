@@ -128,7 +128,9 @@ int main()
                 xBuf[i] = -10.0 + (20.0 * i / 599.0);
                 yBuf[i] = sliderExpr.evalWithContext(xBuf[i], ctx);
             }
-        } }));
+        }
+        volatile double sink = yBuf[0] + yBuf[599];
+        (void)sink; }));
 
     // 5. Multi-Domain Context Evaluation (100,000 pts)
     vStore.set("a", MathValue::real(2.5));
