@@ -20,6 +20,7 @@ set(MATH_SOURCES
     src/core/VariableStore.cpp
     src/core/FunctionRegistry.cpp
     src/core/ExpressionCache.cpp
+    src/core/performance/FrameProfiler.cpp
     src/compiler/ast/Node.cpp
     src/compiler/diagnostics/Diagnostics.cpp
     src/compiler/parser/PrattParser.cpp

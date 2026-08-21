@@ -8,6 +8,7 @@
 #include "ui/panels/PlotPanel.hpp"
 #include "math/numerical.h"
 #include "math/solver.h"
+#include "core/performance/FrameProfiler.hpp"
 #include "imgui.h"
 #include <iostream>
 #include <cmath>
@@ -355,6 +356,8 @@ namespace mathstudio::app
 
         while (m_running)
         {
+            core::performance::FrameProfiler::instance().beginFrame();
+
             while (SDL_PollEvent(&event))
             {
                 ui::UIManager::instance().processEvent(&event);
@@ -362,18 +365,26 @@ namespace mathstudio::app
             }
 
             // Begin ImGui Frame & Dockspace
-            ui::UIManager::instance().beginFrame();
-            ui::UIManager::instance().setupDockspace();
+            {
+                PROFILE_ZONE(core::performance::ProfileZone::ImGuiLayout);
+                ui::UIManager::instance().beginFrame();
+                ui::UIManager::instance().setupDockspace();
 
-            // Clear frame buffer
-            SDL_SetRenderDrawColor(m_renderer, 20, 22, 28, 255);
-            SDL_RenderClear(m_renderer);
+                // Clear frame buffer
+                SDL_SetRenderDrawColor(m_renderer, 20, 22, 28, 255);
+                SDL_RenderClear(m_renderer);
 
-            // Render ImGui UI dockable panels & Scientific Plotter on top
-            ui::UIManager::instance().render(evalContext);
+                // Render ImGui UI dockable panels & Scientific Plotter on top
+                ui::UIManager::instance().render(evalContext);
+            }
 
-            SDL_RenderPresent(m_renderer);
+            {
+                PROFILE_ZONE(core::performance::ProfileZone::SDLRenderPresent);
+                SDL_RenderPresent(m_renderer);
+            }
             m_needsRedraw = false;
+
+            core::performance::FrameProfiler::instance().endFrame();
 
             // Yield CPU slice without artificial 16ms sleep lag
             SDL_Delay(1);

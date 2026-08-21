@@ -23,6 +23,8 @@
 #include "../src/math/constants_registry.h"
 #include "../src/core/VariableStore.hpp"
 #include "../src/core/EvaluationContext.hpp"
+#include "../src/core/performance/PerformanceClock.hpp"
+#include "../src/core/performance/FrameProfiler.hpp"
 
 // Minimal test framework
 
@@ -575,6 +577,62 @@ static void testV030UIFeatures()
     CHECK_APPROX(yBuf[599], 5.0 * (10.0) + 1.5, 1e-6, "v0.3.0 600-point static plot buffer update index 599");
 }
 
+void testV031PerformanceInfrastructure()
+{
+    namespace perf = ::mathstudio::core::performance;
+
+    // 1. PerformanceClock Monotonicity & Elapsed Conversion
+    uint64_t t1 = perf::PerformanceClock::now();
+    CHECK(t1 > 0, "PerformanceClock::now() returns non-zero hardware counter");
+
+    // Busy wait a tiny slice
+    volatile double dummy = 0.0;
+    for (int i = 0; i < 10000; ++i)
+        dummy += i * 0.001;
+    (void)dummy;
+
+    uint64_t t2 = perf::PerformanceClock::now();
+    CHECK(t2 >= t1, "PerformanceClock is monotonic (t2 >= t1)");
+    double elapsed = perf::PerformanceClock::elapsedMs(t1, t2);
+    CHECK(elapsed >= 0.0, "PerformanceClock::elapsedMs() computes positive elapsed time");
+
+    // 2. FrameProfiler Lifecycle & Zone Measurement
+    auto &profiler = perf::FrameProfiler::instance();
+    profiler.reset();
+
+    profiler.beginFrame();
+    profiler.beginZone(perf::ProfileZone::MathEvaluation);
+    profiler.recordAstEvaluations(600);
+    profiler.recordPlotPoints(600);
+    profiler.recordCacheHit();
+    profiler.recordCacheMiss();
+    profiler.endZone(perf::ProfileZone::MathEvaluation);
+    profiler.endFrame();
+
+    const auto &telemetry = profiler.getTelemetry();
+    CHECK(telemetry.astEvaluations == 600u, "FrameProfiler records 600 AST evaluations");
+    CHECK(telemetry.plotPointsSampled == 600u, "FrameProfiler records 600 plot points sampled");
+    CHECK(telemetry.cacheHits == 1u, "FrameProfiler records 1 cache hit");
+    CHECK(telemetry.cacheMisses == 1u, "FrameProfiler records 1 cache miss");
+    CHECK(telemetry.frameTimeMs >= 0.0, "FrameProfiler computes valid frame duration");
+
+    // 3. Ring Buffer Wraparound & Percentile Calculation (Simulate 320 frames)
+    for (int f = 0; f < 320; ++f)
+    {
+        profiler.beginFrame();
+        profiler.beginZone(perf::ProfileZone::PlotSampling);
+        profiler.endZone(perf::ProfileZone::PlotSampling);
+        profiler.endFrame();
+    }
+
+    const auto &finalTelemetry = profiler.getTelemetry();
+    CHECK(finalTelemetry.p50Ms >= 0.0, "FrameProfiler computes valid P50 median");
+    CHECK(finalTelemetry.p95Ms >= finalTelemetry.p50Ms, "FrameProfiler P95 >= P50");
+    CHECK(finalTelemetry.p99Ms >= finalTelemetry.p95Ms, "FrameProfiler P99 >= P95");
+    CHECK(finalTelemetry.maxMs >= finalTelemetry.p99Ms, "FrameProfiler Max >= P99");
+    CHECK(profiler.getFrameHistory().size() == 300u, "FrameProfiler maintains exact 300-frame ring buffer");
+}
+
 // Main
 
 int main()
@@ -593,6 +651,7 @@ int main()
     testEdgeCases();
     testV11Features();
     testV030UIFeatures();
+    testV031PerformanceInfrastructure();
 
     std::cout << std::string(50, '-') << std::endl;
     std::cout << "Results: " << g_passed << " passed, "

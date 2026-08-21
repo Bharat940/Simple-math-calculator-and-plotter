@@ -42,7 +42,9 @@ graph TD
 
     v020["v0.2.0 AST Engine Architecture (Complete & Frozen)<br/>• Compiler Substructure (src/compiler/)<br/>• Pratt Parser Engine (Binding-Power Operator Table)<br/>• MathValue C++17 std::variant (double, complex, Matrix, Vector, bool)<br/>• EvaluationContext (Vars, Functions, Diagnostics)<br/>• Visitor Substrate (EvalVisitor, PrintVisitor)<br/>• PassManager Passes (ConstantFoldVisitor, SimplifyVisitor)<br/>• O(1) Variable Slots & Enum Opcodes (BinaryOpType, UnaryOpType)<br/>• ExpressionCache & Deprecate RPN to legacy/"] --> v030
 
-    v030["v0.3.0 Dear ImGui & ImPlot UI Overhaul (Complete & Frozen)<br/>• Dear ImGui Docking UI Subsystem<br/>• ImPlot Multi-Domain Canvas (Cartesian, Time, Discrete, Polar)<br/>• Variable Inspector (sliders, Play/Pause ▶/⏸, --var CLI sync, trash 🗑 delete)<br/>• Real-time Derivative Curves [D] & Multi-domain Solvers<br/>• --check-leaks MSVC CRT Heap Audit (0 Leaks)<br/>• Zero-Allocation Plot Render Buffers"] --> v040
+    v030["v0.3.0 Dear ImGui & ImPlot UI Overhaul (Complete & Frozen)<br/>• Dear ImGui Docking UI Subsystem<br/>• ImPlot Multi-Domain Canvas (Cartesian, Time, Discrete, FFT)<br/>• Variable Inspector (sliders, Play/Pause ▶/⏸, --var CLI sync, trash 🗑 delete)<br/>• Real-time Derivative Curves [D] & Multi-domain Solvers<br/>• --check-leaks MSVC CRT Heap Audit (0 Leaks)<br/>• Zero-Allocation Plot Render Buffers"] --> v031
+
+    v031["v0.3.1 Performance & Profiling Baseline (Current Focus)<br/>• 4-Tier Benchmark Taxonomy (engine, rendering, ui, integration)<br/>• Zero-Heap FrameProfiler with Fixed Zone Enums & Scope Timers<br/>• Frame Time Percentiles (Min, Med, P95, P99, Max Distribution)<br/>• Viewport State Hashing & Dirty Flag Resampling (Zero Idle Eval)<br/>• Machine-Readable Telemetry (benchmarks/results/*.json)<br/>• Platform Profiler Playbooks (VS CPU Profiler, WPR/WPA, perf)"] --> v040
 
     v040["v0.4.0 Calculus Engine (Next)<br/>• Symbolic Differentiation (DerivativeVisitor)<br/>• Numerical Integration (Simpson's 3/8, Adaptive Quadrature)<br/>• Limits & Taylor Series Expansion<br/>• ASTArenaAllocator Pool Memory"] --> v050
 
@@ -52,7 +54,7 @@ graph TD
 
     v070["v0.7.0 Computer Algebra System (CAS)<br/>• Full CAS Symbolic Engine<br/>• Polynomial Expansion & Factoring"] --> v080
 
-    v080["v0.8.0 Sessions & Project Serialization<br/>• AST Serialization to JSON<br/>• Multi-Level Undo / Redo & Session State Manager"] --> v085
+    v080["v0.8.0 Sessions & Project Serialization<br/>• AST JSON Serialization<br/>• Multi-Level Undo / Redo & Session State Manager"] --> v085
 
     v085["v0.8.5 Renderer Abstraction Layer<br/>• IRenderer Hardware Abstraction Interface<br/>• Modular Backends: SDL_Renderer | OpenGL | Vulkan | DirectX"] --> v100
 
@@ -61,7 +63,8 @@ graph TD
     style v010 fill:#e1f5fe,stroke:#01579b
     style v020 fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px
     style v030 fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px
-    style v040 fill:#fff3e0,stroke:#ef6c00,stroke-width:3px
+    style v031 fill:#fff3e0,stroke:#ef6c00,stroke-width:3px
+    style v040 fill:#f3e5f5,stroke:#7b1fa2
     style v100 fill:#fff9c4,stroke:#fbc02d,stroke-width:2px
 ```
 
@@ -71,9 +74,10 @@ graph TD
 
 | Version | Focus | Status | Key Deliverables & Architectural Specs |
 |---------|-------|--------|---------------------------------------|
-| **v0.1.0** | Foundation | ✅ Complete | C++17 refactoring, 132 unit tests, benchmark baseline, dark titlebar, coordinate labels |
+| **v0.1.0** | Foundation | ✅ Complete | C++17 refactoring, 139 unit tests, benchmark baseline, dark titlebar, coordinate labels |
 | **v0.2.0** | AST Engine Architecture | ✅ Complete & Frozen | `src/compiler/`, Pratt parser, `std::variant<MathValue>`, `EvaluationContext`, `ExpressionCache`, `ConstantFoldVisitor`, `SimplifyVisitor`, $O(1)$ variable slots, `BinaryOpType`/`UnaryOpType` enums |
-| **v0.3.0** | ImGui & ImPlot UI Overhaul | ✅ Complete & Frozen | Dear ImGui docking UI, Render-to-Texture `CanvasPanel`, ImPlot multi-domain visualizers ($f(x)$, $f(t)$, $f[n]$, $r(\theta)$), `src/ui/widgets/` layer, Variable Inspector with trash `🗑` delete & `--var` CLI sync, `--check-leaks` MSVC CRT audit, zero-allocation buffers, real-time derivative curves `[D]` |
+| **v0.3.0** | ImGui & ImPlot UI Overhaul | ✅ Complete & Frozen | Dear ImGui docking UI, Render-to-Texture `CanvasPanel`, ImPlot multi-domain visualizers ($f(x)$, $f(t)$, $f[n]$, FFT), `src/ui/widgets/` layer, Variable Inspector with trash `🗑` delete & `--var` CLI sync, `--check-leaks` MSVC CRT audit, zero-allocation buffers, real-time derivative curves `[D]` |
+| **v0.3.1** | Performance & Profiling Baseline | 🚀 Active | 4-tier benchmark taxonomy (`engine/`, `rendering/`, `ui/`, `integration/`), zero-heap `FrameProfiler` with fixed zone enums, frame-time latency percentiles (P50/P95/P99), viewport dirty flag caching (zero idle re-evaluations), machine-readable JSON telemetry |
 | **v0.4.0** | Calculus Engine | 📋 Next | Symbolic differentiation (`DerivativeVisitor`), numerical integration (Simpson's 3/8, Adaptive Quadrature), Taylor series, `ASTArenaAllocator`, adaptive sub-pixel resampling |
 | **v0.5.0** | DSP & Signals | 📋 Planned | DFT, FFT, IFFT, discrete convolution, correlation, window functions, spectrogram visualization, SIMD (AVX2) vectorization |
 | **v0.6.0** | Linear Algebra | 📋 Planned | Matrix & Vector AST nodes, typed `Matrix<T>`, Gaussian elimination, determinants, eigenvalues |

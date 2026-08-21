@@ -6,13 +6,14 @@
 #include "math/solver.h"
 #include "math/numerical.h"
 #include "core/EngineProfiler.hpp"
+#include "core/performance/FrameProfiler.hpp"
+#include "core/performance/PerformanceClock.hpp"
 #include "imgui.h"
 #include "implot.h"
 #include <vector>
 #include <cmath>
 #include <limits>
 #include <string>
-#include <chrono>
 
 namespace mathstudio::ui
 {
@@ -20,10 +21,7 @@ namespace mathstudio::ui
     // ─── Helpers ──────────────────────────────────────────────────────────────
     static double nowMs()
     {
-        using namespace std::chrono;
-        return static_cast<double>(
-                   duration_cast<microseconds>(high_resolution_clock::now().time_since_epoch()).count()) /
-               1000.0;
+        return core::performance::PerformanceClock::elapsedMs(0, core::performance::PerformanceClock::now());
     }
 
     // Simple DFT for power spectrum rendering
@@ -295,30 +293,36 @@ namespace mathstudio::ui
                             int nanCount = 0;
 
                             double t0eval = nowMs();
-                            for (int i = 0; i < SAMPLE_COUNT; ++i)
                             {
-                                context.vars.set("x", MathValue::real(xData[i]));
-                                double y = expr.evalWithContext(xData[i], context);
-
-                                // Enhanced Asymptote / Discontinuity clipping
-                                if (i > 0 && std::isfinite(y) && std::isfinite(yData[i - 1]))
+                                PROFILE_ZONE(core::performance::ProfileZone::MathEvaluation);
+                                for (int i = 0; i < SAMPLE_COUNT; ++i)
                                 {
-                                    double diff = std::abs(y - yData[i - 1]);
-                                    bool isSignFlipNearPole = (y * yData[i - 1] < 0) && (diff > discThresh * 0.1);
-                                    if (diff > discThresh || isSignFlipNearPole)
+                                    context.vars.set("x", MathValue::real(xData[i]));
+                                    double y = expr.evalWithContext(xData[i], context);
+
+                                    // Enhanced Asymptote / Discontinuity clipping
+                                    if (i > 0 && std::isfinite(y) && std::isfinite(yData[i - 1]))
                                     {
-                                        yData[i - 1] = std::numeric_limits<double>::quiet_NaN();
+                                        double diff = std::abs(y - yData[i - 1]);
+                                        bool isSignFlipNearPole = (y * yData[i - 1] < 0) && (diff > discThresh * 0.1);
+                                        if (diff > discThresh || isSignFlipNearPole)
+                                        {
+                                            yData[i - 1] = std::numeric_limits<double>::quiet_NaN();
+                                        }
                                     }
+
+                                    if (!std::isfinite(y))
+                                        ++nanCount;
+
+                                    yData[i] = std::isfinite(y) ? y : std::numeric_limits<double>::quiet_NaN();
                                 }
-
-                                if (!std::isfinite(y))
-                                    ++nanCount;
-
-                                yData[i] = std::isfinite(y) ? y : std::numeric_limits<double>::quiet_NaN();
                             }
                             double evalMs = nowMs() - t0eval;
                             totalEvalMs += evalMs;
                             totalSamples += SAMPLE_COUNT;
+
+                            core::performance::FrameProfiler::instance().recordPlotPoints(SAMPLE_COUNT);
+                            core::performance::FrameProfiler::instance().recordAstEvaluations(SAMPLE_COUNT);
 
                             auto &profStats = core::EngineProfilerStats::instance();
                             profStats.lastParseTimeMs = parseMs;
@@ -341,11 +345,15 @@ namespace mathstudio::ui
 
                             std::string lineLabel = item.text + "##" + std::to_string(exprIdx);
                             ImVec4 col(item.color[0], item.color[1], item.color[2], 1.0f);
-                            ImPlot::SetNextLineStyle(col, 2.0f);
-                            ImPlot::PlotLine(lineLabel.c_str(), xData.data(), yData.data(), SAMPLE_COUNT);
+                            {
+                                PROFILE_ZONE(core::performance::ProfileZone::ImPlotRender);
+                                ImPlot::SetNextLineStyle(col, 2.0f);
+                                ImPlot::PlotLine(lineLabel.c_str(), xData.data(), yData.data(), SAMPLE_COUNT);
+                            }
 
                             if (ctrl->toolbarWidget.showDerivative && item.showDerivative)
                             {
+                                PROFILE_ZONE(core::performance::ProfileZone::DerivativeEval);
                                 std::vector<double> dyData(SAMPLE_COUNT);
                                 for (int i = 0; i < SAMPLE_COUNT; ++i)
                                 {
@@ -385,6 +393,7 @@ namespace mathstudio::ui
 
                             if (ctrl->toolbarWidget.showRoots && item.showRoots)
                             {
+                                PROFILE_ZONE(core::performance::ProfileZone::RootExtremaScan);
                                 std::vector<double> rootXs = findRoots(expr, xMin, xMax, scanStep, EPS_ROOT, &context);
                                 std::vector<double> rootYs(rootXs.size(), 0.0);
                                 if (!rootXs.empty())
@@ -398,6 +407,7 @@ namespace mathstudio::ui
 
                             if (ctrl->toolbarWidget.showExtrema && item.showExtrema)
                             {
+                                PROFILE_ZONE(core::performance::ProfileZone::RootExtremaScan);
                                 std::vector<double> extremaXs = findExtrema(expr, xMin, xMax, scanStep, EPS_ROOT, &context);
                                 std::vector<double> extremaYs;
                                 for (double ex : extremaXs)
@@ -486,20 +496,30 @@ namespace mathstudio::ui
                                 if (!expr.isValid())
                                     continue;
 
-                                for (int i = 0; i < SAMPLE_COUNT; ++i)
                                 {
-                                    context.vars.set("t", MathValue::real(tData[i]));
-                                    double y = expr.evalSignalWithContext(tData[i], tData[i], tData[i], context);
-                                    yData[i] = std::isfinite(y) ? y : std::numeric_limits<double>::quiet_NaN();
+                                    PROFILE_ZONE(core::performance::ProfileZone::MathEvaluation);
+                                    for (int i = 0; i < SAMPLE_COUNT; ++i)
+                                    {
+                                        context.vars.set("t", MathValue::real(tData[i]));
+                                        double y = expr.evalSignalWithContext(tData[i], tData[i], tData[i], context);
+                                        yData[i] = std::isfinite(y) ? y : std::numeric_limits<double>::quiet_NaN();
+                                    }
                                 }
+
+                                core::performance::FrameProfiler::instance().recordPlotPoints(SAMPLE_COUNT);
+                                core::performance::FrameProfiler::instance().recordAstEvaluations(SAMPLE_COUNT);
 
                                 ImVec4 col(item.color[0], item.color[1], item.color[2], 1.0f);
                                 std::string lbl = item.text + "##t" + std::to_string(exprIdx);
-                                ImPlot::SetNextLineStyle(col, 2.0f);
-                                ImPlot::PlotLine(lbl.c_str(), tData.data(), yData.data(), SAMPLE_COUNT);
+                                {
+                                    PROFILE_ZONE(core::performance::ProfileZone::ImPlotRender);
+                                    ImPlot::SetNextLineStyle(col, 2.0f);
+                                    ImPlot::PlotLine(lbl.c_str(), tData.data(), yData.data(), SAMPLE_COUNT);
+                                }
 
                                 if (ctrl->toolbarWidget.showDerivative && item.showDerivative)
                                 {
+                                    PROFILE_ZONE(core::performance::ProfileZone::DerivativeEval);
                                     std::vector<double> dyData(SAMPLE_COUNT);
                                     for (int i = 0; i < SAMPLE_COUNT; ++i)
                                     {

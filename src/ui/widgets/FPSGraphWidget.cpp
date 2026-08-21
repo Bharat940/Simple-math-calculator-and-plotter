@@ -1,4 +1,5 @@
 #include "ui/widgets/FPSGraphWidget.hpp"
+#include "core/performance/FrameProfiler.hpp"
 #include "imgui.h"
 
 #ifdef _WIN32
@@ -13,21 +14,18 @@
 
 namespace mathstudio::ui
 {
-
-    FPSGraphWidget::FPSGraphWidget()
-    {
-        m_frameTimeHistory.resize(m_maxHistory, 16.6f);
-    }
-
     void FPSGraphWidget::render(core::EvaluationContext &)
     {
-        float fps = ImGui::GetIO().Framerate > 0.0f ? ImGui::GetIO().Framerate : 60.0f;
-        float currentMs = 1000.0f / fps;
+        auto &profiler = core::performance::FrameProfiler::instance();
+        const auto &history = profiler.getFrameHistory();
+        int ringIdx = static_cast<int>(profiler.getRingIndex());
+        const auto &telemetry = profiler.getTelemetry();
 
-        m_frameTimeHistory.erase(m_frameTimeHistory.begin());
-        m_frameTimeHistory.push_back(currentMs);
+        // Render frame time history using ImGui PlotLines directly from pre-allocated ring buffer
+        char overlayText[64];
+        std::snprintf(overlayText, sizeof(overlayText), "%.2f ms (%.1f FPS)", telemetry.frameTimeMs, telemetry.fps);
 
-        ImGui::PlotLines("Frame Time (ms)", m_frameTimeHistory.data(), static_cast<int>(m_frameTimeHistory.size()), 0, nullptr, 0.0f, 33.3f, ImVec2(0, 80));
+        ImGui::PlotLines("##FrameTimePlot", history.data(), static_cast<int>(history.size()), ringIdx, overlayText, 0.0f, 33.33f, ImVec2(-1, 65));
 
 #if defined(_WIN32)
         PROCESS_MEMORY_COUNTERS pmc;
